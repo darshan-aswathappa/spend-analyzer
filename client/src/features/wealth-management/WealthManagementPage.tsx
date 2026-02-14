@@ -4,6 +4,7 @@ import {
   Background,
   Controls,
   MiniMap,
+  ReactFlowProvider,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { Monitor } from 'lucide-react';
@@ -13,13 +14,40 @@ import { WealthNode } from './WealthNode';
 import { MoneyEdge } from './MoneyEdge';
 import { WealthToolbar } from './WealthToolbar';
 
-export function WealthManagementPage() {
-  const { nodes, edges, onNodesChange, onEdgesChange, reset } = useWealthTree();
+function WealthManagementCanvas() {
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, reset, addSource } =
+    useWealthTree();
   const { resolvedTheme } = useTheme();
 
   const nodeTypes = useMemo(() => ({ wealth: WealthNode }), []);
   const edgeTypes = useMemo(() => ({ money: MoneyEdge }), []);
 
+  return (
+    <ReactFlow
+      nodes={nodes}
+      edges={edges}
+      onNodesChange={onNodesChange}
+      onEdgesChange={onEdgesChange}
+      onConnect={onConnect}
+      nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
+      fitView
+      colorMode={resolvedTheme === 'dark' ? 'dark' : 'light'}
+      proOptions={{ hideAttribution: true }}
+      minZoom={0.2}
+      maxZoom={2}
+      defaultEdgeOptions={{ animated: true }}
+      connectionLineStyle={{ stroke: '#94a3b8', strokeWidth: 2 }}
+    >
+      <Background gap={20} size={1} />
+      <Controls showInteractive={false} />
+      <MiniMap nodeStrokeWidth={3} zoomable pannable />
+      <WealthToolbar onReset={reset} onAddSource={addSource} />
+    </ReactFlow>
+  );
+}
+
+export function WealthManagementPage() {
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col -m-4 md:-m-6">
       {/* Mobile blocker */}
@@ -30,36 +58,17 @@ export function WealthManagementPage() {
             Desktop Recommended
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            The wealth management playground is best experienced on a larger screen. Please switch to a desktop or tablet for the full experience.
+            The wealth management playground is best experienced on a larger screen. Please switch
+            to a desktop or tablet for the full experience.
           </p>
         </div>
       </div>
 
       {/* Desktop content */}
       <div className="hidden md:flex flex-1 relative">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          fitView
-          colorMode={resolvedTheme === 'dark' ? 'dark' : 'light'}
-          proOptions={{ hideAttribution: true }}
-          minZoom={0.2}
-          maxZoom={2}
-          defaultEdgeOptions={{ animated: true }}
-        >
-          <Background gap={20} size={1} />
-          <Controls showInteractive={false} />
-          <MiniMap
-            nodeStrokeWidth={3}
-            zoomable
-            pannable
-          />
-          <WealthToolbar onReset={reset} />
-        </ReactFlow>
+        <ReactFlowProvider>
+          <WealthManagementCanvas />
+        </ReactFlowProvider>
       </div>
     </div>
   );

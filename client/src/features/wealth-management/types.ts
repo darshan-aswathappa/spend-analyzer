@@ -5,8 +5,8 @@ export interface WealthNodeData {
   id: string;
   label: string;
   amount: number;
-  parentId: string | null;
   splitMode: SplitMode;
+  isSource: boolean; // true = user-editable amount (top-level source node)
 }
 
 export interface WealthEdgeData {
@@ -21,6 +21,5 @@ export interface WealthEdgeData {
 export interface WealthTreeState {
   nodes: Record<string, WealthNodeData>;
   edges: Record<string, WealthEdgeData>;
-  rootId: string;
   nextNodeNum: number;
 }

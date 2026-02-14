@@ -14,7 +14,7 @@ import {
 import { formatCurrency } from '@/lib/utils';
 
 type WealthNodeProps = NodeProps & {
-  data: WealthNodeData & { isRoot: boolean; hasChildren: boolean };
+  data: WealthNodeData & { hasChildren: boolean; hasParents: boolean };
 };
 
 export const WealthNode = memo(function WealthNode({ data }: WealthNodeProps) {
@@ -47,19 +47,17 @@ export const WealthNode = memo(function WealthNode({ data }: WealthNodeProps) {
     <div
       className={`
         w-[220px] rounded-xl border bg-white dark:bg-gray-900 shadow-sm
-        ${data.isRoot
+        ${data.isSource
           ? 'border-green-400 dark:border-green-600 ring-2 ring-green-100 dark:ring-green-900/40'
           : 'border-gray-200 dark:border-gray-700'}
       `}
     >
-      {/* Target handle (top) — hidden for root */}
-      {!data.isRoot && (
-        <Handle
-          type="target"
-          position={Position.Top}
-          className="!w-3 !h-3 !bg-blue-500 !border-2 !border-white dark:!border-gray-900"
-        />
-      )}
+      {/* Target handle (top) — always visible for connecting */}
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="!w-3 !h-3 !bg-blue-500 !border-2 !border-white dark:!border-gray-900"
+      />
 
       <div className="p-3">
         {/* Header row: label + delete */}
@@ -82,20 +80,18 @@ export const WealthNode = memo(function WealthNode({ data }: WealthNodeProps) {
               {data.label}
             </button>
           )}
-          {!data.isRoot && (
-            <button
-              onClick={() => dispatch(removeNode({ id: data.id }))}
-              className="shrink-0 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-colors"
-              title="Remove"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          )}
+          <button
+            onClick={() => dispatch(removeNode({ id: data.id }))}
+            className="shrink-0 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-colors"
+            title="Remove"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         {/* Amount */}
         <div className="mb-2">
-          {data.isRoot && editingAmount ? (
+          {data.isSource && editingAmount ? (
             <div className="flex items-center gap-1">
               <span className="text-sm text-gray-500 dark:text-gray-400">$</span>
               <input
@@ -113,20 +109,23 @@ export const WealthNode = memo(function WealthNode({ data }: WealthNodeProps) {
           ) : (
             <button
               onClick={() => {
-                if (data.isRoot) {
+                if (data.isSource) {
                   setAmountValue(String(data.amount));
                   setEditingAmount(true);
                 }
               }}
               className={`text-lg font-bold ${
-                data.isRoot
+                data.isSource
                   ? 'text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 cursor-pointer'
                   : 'text-gray-900 dark:text-gray-100 cursor-default'
               }`}
-              title={data.isRoot ? 'Click to edit amount' : undefined}
+              title={data.isSource ? 'Click to edit amount' : undefined}
             >
               {formatCurrency(data.amount)}
             </button>
+          )}
+          {data.isSource && (
+            <span className="text-[10px] text-green-600 dark:text-green-400 font-medium">SOURCE</span>
           )}
         </div>
 
