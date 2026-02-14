@@ -9,7 +9,7 @@ import {
   type OnConnect,
 } from '@xyflow/react';
 import type { RootState, AppDispatch } from '@/app/store';
-import type { WealthNodeData, WealthEdgeData } from './types';
+import type { WealthNodeData, WealthEdgeData, WealthTreeState } from './types';
 import { resetTree, addSourceNode, connectNodes } from './wealthManagementSlice';
 
 const NODE_WIDTH = 220;
@@ -17,13 +17,13 @@ const H_GAP = 80;
 const V_GAP = 180;
 
 // Compute a structural fingerprint: changes only when nodes/edges are added or removed
-function getStructureKey(tree: RootState['wealthManagement']['tree']): string {
+function getStructureKey(tree: WealthTreeState): string {
   const nodeIds = Object.keys(tree.nodes).sort().join(',');
   const edgeIds = Object.keys(tree.edges).sort().join(',');
   return `${nodeIds}|${edgeIds}`;
 }
 
-function computeLayout(tree: RootState['wealthManagement']['tree']) {
+function computeLayout(tree: WealthTreeState) {
   const { nodes: treeNodes, edges: treeEdges } = tree;
 
   // Build adjacency maps
@@ -89,7 +89,11 @@ function computeLayout(tree: RootState['wealthManagement']['tree']) {
   return positions;
 }
 
-function buildFlowData(tree: RootState['wealthManagement']['tree'], positions: Record<string, { x: number; y: number }>) {
+function buildFlowData(
+  tree: WealthTreeState,
+  positions: Record<string, { x: number; y: number }>,
+  flowId: string
+) {
   const { nodes: treeNodes, edges: treeEdges } = tree;
 
   const childrenMap: Record<string, string[]> = {};
@@ -105,32 +109,37 @@ function buildFlowData(tree: RootState['wealthManagement']['tree'], positions: R
     parentMap[edge.targetId]?.push(edge.sourceId);
   }
 
-  const flowNodes: Node<WealthNodeData & { hasChildren: boolean; hasParents: boolean }>[] =
+  const flowNodes: Node<WealthNodeData & { hasChildren: boolean; hasParents: boolean; flowId: string }>[] =
     Object.values(treeNodes).map((node) => ({
       id: node.id,
       type: 'wealth',
       position: positions[node.id] || { x: 0, y: 0 },
       data: {
         ...node,
+        flowId,
         hasChildren: (childrenMap[node.id] || []).length > 0,
         hasParents: (parentMap[node.id] || []).length > 0,
       },
     }));
 
-  const flowEdges: Edge<WealthEdgeData>[] = Object.values(treeEdges).map((edge) => ({
+  const flowEdges: Edge<WealthEdgeData & { flowId: string }>[] = Object.values(treeEdges).map((edge) => ({
     id: edge.id,
     source: edge.sourceId,
     target: edge.targetId,
     type: 'money',
-    data: edge,
+    data: { ...edge, flowId },
   }));
 
   return { nodes: flowNodes, edges: flowEdges };
 }
 
-export function useWealthTree() {
+const emptyTree: WealthTreeState = { nodes: {}, edges: {}, nextNodeNum: 1 };
+
+export function useWealthTree(flowId: string) {
   const dispatch = useDispatch<AppDispatch>();
-  const tree = useSelector((state: RootState) => state.wealthManagement.tree);
+  const tree = useSelector((state: RootState) =>
+    state.wealthManagement.flows[flowId]?.tree
+  ) ?? emptyTree;
 
   // Track structural changes separately from data changes
   const structureKey = useMemo(() => getStructureKey(tree), [tree]);
@@ -147,8 +156,8 @@ export function useWealthTree() {
   }
 
   const flowData = useMemo(
-    () => buildFlowData(tree, positionsRef.current),
-    [tree]
+    () => buildFlowData(tree, positionsRef.current, flowId),
+    [tree, flowId]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(flowData.nodes);
@@ -210,21 +219,21 @@ export function useWealthTree() {
   });
 
   const reset = useCallback(() => {
-    dispatch(resetTree());
+    dispatch(resetTree({ flowId }));
     positionsRef.current = {};
-  }, [dispatch]);
+  }, [dispatch, flowId]);
 
   const addSource = useCallback(() => {
-    dispatch(addSourceNode());
-  }, [dispatch]);
+    dispatch(addSourceNode({ flowId }));
+  }, [dispatch, flowId]);
 
   const onConnect: OnConnect = useCallback(
     (connection) => {
       if (connection.source && connection.target) {
-        dispatch(connectNodes({ sourceId: connection.source, targetId: connection.target }));
+        dispatch(connectNodes({ flowId, sourceId: connection.source, targetId: connection.target }));
       }
     },
-    [dispatch]
+    [dispatch, flowId]
   );
 
   return {

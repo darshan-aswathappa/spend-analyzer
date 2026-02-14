@@ -12,7 +12,7 @@ import { updateEdgeSplit } from './wealthManagementSlice';
 import { formatCurrency } from '@/lib/utils';
 
 type MoneyEdgeProps = EdgeProps & {
-  data: WealthEdgeData;
+  data: WealthEdgeData & { flowId: string };
 };
 
 export const MoneyEdge = memo(function MoneyEdge({
@@ -26,7 +26,7 @@ export const MoneyEdge = memo(function MoneyEdge({
 }: MoneyEdgeProps) {
   const dispatch = useDispatch<AppDispatch>();
   const parentNode = useSelector((state: RootState) =>
-    state.wealthManagement.tree.nodes[data.sourceId]
+    state.wealthManagement.flows[data.flowId]?.tree.nodes[data.sourceId]
   );
 
   const [editing, setEditing] = useState(false);
@@ -60,8 +60,8 @@ export const MoneyEdge = memo(function MoneyEdge({
     setEditing(false);
     const num = parseFloat(inputValue);
     if (isNaN(num) || num < 0) return;
-    dispatch(updateEdgeSplit({ edgeId: data.id, value: num }));
-  }, [dispatch, data.id, inputValue]);
+    dispatch(updateEdgeSplit({ flowId: data.flowId, edgeId: data.id, value: num }));
+  }, [dispatch, data.flowId, data.id, inputValue]);
 
   return (
     <>

@@ -1,8 +1,8 @@
 import { memo, useState, useCallback } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import { useDispatch } from 'react-redux';
-import { Plus, Trash2, Percent, DollarSign } from 'lucide-react';
-import type { AppDispatch } from '@/app/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { Plus, Trash2, Percent, DollarSign, Briefcase, X } from 'lucide-react';
+import type { AppDispatch, RootState } from '@/app/store';
 import type { WealthNodeData } from './types';
 import {
   updateNodeAmount,
@@ -10,11 +10,13 @@ import {
   addChildNode,
   removeNode,
   setSplitMode,
+  unlinkAssetFromNode,
 } from './wealthManagementSlice';
 import { formatCurrency } from '@/lib/utils';
+import { NodeAssetPanel } from './NodeAssetPanel';
 
 type WealthNodeProps = NodeProps & {
-  data: WealthNodeData & { hasChildren: boolean; hasParents: boolean };
+  data: WealthNodeData & { hasChildren: boolean; hasParents: boolean; flowId: string };
 };
 
 export const WealthNode = memo(function WealthNode({ data }: WealthNodeProps) {
@@ -23,25 +25,33 @@ export const WealthNode = memo(function WealthNode({ data }: WealthNodeProps) {
   const [editingAmount, setEditingAmount] = useState(false);
   const [labelValue, setLabelValue] = useState(data.label);
   const [amountValue, setAmountValue] = useState(String(data.amount));
+  const [showAssetPanel, setShowAssetPanel] = useState(false);
+
+  const linkedAssets = useSelector((state: RootState) => {
+    return Object.values(state.wealthManagement.assetNodeLinks)
+      .filter(link => link.nodeId === data.id)
+      .map(link => state.wealthManagement.assets[link.assetId])
+      .filter(Boolean);
+  });
 
   const handleLabelSubmit = useCallback(() => {
     setEditingLabel(false);
     if (labelValue.trim() && labelValue.trim() !== data.label) {
-      dispatch(updateNodeLabel({ id: data.id, label: labelValue.trim() }));
+      dispatch(updateNodeLabel({ flowId: data.flowId, id: data.id, label: labelValue.trim() }));
     } else {
       setLabelValue(data.label);
     }
-  }, [dispatch, data.id, data.label, labelValue]);
+  }, [dispatch, data.flowId, data.id, data.label, labelValue]);
 
   const handleAmountSubmit = useCallback(() => {
     setEditingAmount(false);
     const num = parseFloat(amountValue);
     if (!isNaN(num) && num >= 0 && num !== data.amount) {
-      dispatch(updateNodeAmount({ id: data.id, amount: num }));
+      dispatch(updateNodeAmount({ flowId: data.flowId, id: data.id, amount: num }));
     } else {
       setAmountValue(String(data.amount));
     }
-  }, [dispatch, data.id, data.amount, amountValue]);
+  }, [dispatch, data.flowId, data.id, data.amount, amountValue]);
 
   return (
     <div
@@ -81,7 +91,7 @@ export const WealthNode = memo(function WealthNode({ data }: WealthNodeProps) {
             </button>
           )}
           <button
-            onClick={() => dispatch(removeNode({ id: data.id }))}
+            onClick={() => dispatch(removeNode({ flowId: data.flowId, id: data.id }))}
             className="shrink-0 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-colors"
             title="Remove"
           >
@@ -134,7 +144,7 @@ export const WealthNode = memo(function WealthNode({ data }: WealthNodeProps) {
           <div className="flex items-center gap-1 mb-2">
             <span className="text-[10px] text-gray-500 dark:text-gray-400 mr-1">Split:</span>
             <button
-              onClick={() => dispatch(setSplitMode({ id: data.id, mode: 'percentage' }))}
+              onClick={() => dispatch(setSplitMode({ flowId: data.flowId, id: data.id, mode: 'percentage' }))}
               className={`p-1 rounded text-[10px] font-medium transition-colors ${
                 data.splitMode === 'percentage'
                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400'
@@ -145,7 +155,7 @@ export const WealthNode = memo(function WealthNode({ data }: WealthNodeProps) {
               <Percent className="w-3 h-3" />
             </button>
             <button
-              onClick={() => dispatch(setSplitMode({ id: data.id, mode: 'exact' }))}
+              onClick={() => dispatch(setSplitMode({ flowId: data.flowId, id: data.id, mode: 'exact' }))}
               className={`p-1 rounded text-[10px] font-medium transition-colors ${
                 data.splitMode === 'exact'
                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400'
@@ -160,12 +170,45 @@ export const WealthNode = memo(function WealthNode({ data }: WealthNodeProps) {
 
         {/* Add child button */}
         <button
-          onClick={() => dispatch(addChildNode({ parentId: data.id }))}
+          onClick={() => dispatch(addChildNode({ flowId: data.flowId, parentId: data.id }))}
           className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg border border-dashed border-gray-300 dark:border-gray-600 text-[11px] font-medium text-gray-500 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 dark:hover:border-blue-500 dark:hover:text-blue-400 transition-colors"
         >
           <Plus className="w-3 h-3" />
           Add Child
         </button>
+
+        {/* Assets section — beneficiary (non-source) nodes only */}
+        {!data.isSource && (
+          <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">ASSETS</span>
+              <button
+                onClick={() => setShowAssetPanel(true)}
+                className="p-0.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-gray-400 hover:text-blue-500 transition-colors"
+                title="Manage assets"
+              >
+                <Briefcase className="w-3 h-3" />
+              </button>
+            </div>
+            {linkedAssets.length === 0 ? (
+              <p className="text-[10px] text-gray-400 italic">None linked</p>
+            ) : (
+              <div className="space-y-0.5">
+                {linkedAssets.map(asset => (
+                  <div key={asset.id} className="flex items-center justify-between">
+                    <span className="text-[10px] text-gray-600 dark:text-gray-300 truncate">{asset.name}</span>
+                    <button
+                      onClick={() => dispatch(unlinkAssetFromNode({ assetId: asset.id, nodeId: data.id }))}
+                      className="p-0.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Source handle (bottom) */}
@@ -174,6 +217,16 @@ export const WealthNode = memo(function WealthNode({ data }: WealthNodeProps) {
         position={Position.Bottom}
         className="!w-3 !h-3 !bg-blue-500 !border-2 !border-white dark:!border-gray-900"
       />
+
+      {/* Asset panel dialog */}
+      {showAssetPanel && (
+        <NodeAssetPanel
+          nodeId={data.id}
+          nodeName={data.label}
+          open={showAssetPanel}
+          onClose={() => setShowAssetPanel(false)}
+        />
+      )}
     </div>
   );
 });

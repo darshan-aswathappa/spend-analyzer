@@ -1,5 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { WealthTreeState, SplitMode } from './types';
+import type { WealthTreeState, WealthFlow, WealthAsset, AssetNodeLink, SplitMode } from './types';
 
 function createInitialTree(): WealthTreeState {
   return {
@@ -114,66 +114,159 @@ function wouldCreateCycle(state: WealthTreeState, sourceId: string, targetId: st
   return false;
 }
 
+// Helper to clean up asset links for a set of node IDs
+function cleanupLinksForNodes(
+  assetNodeLinks: Record<string, AssetNodeLink>,
+  nodeIds: Set<string>
+) {
+  for (const linkKey of Object.keys(assetNodeLinks)) {
+    if (nodeIds.has(assetNodeLinks[linkKey].nodeId)) {
+      delete assetNodeLinks[linkKey];
+    }
+  }
+}
+
 interface WealthManagementState {
-  tree: WealthTreeState;
+  flows: Record<string, WealthFlow>;
+  assets: Record<string, WealthAsset>;
+  assetNodeLinks: Record<string, AssetNodeLink>;
+  nextFlowNum: number;
+  nextAssetNum: number;
 }
 
 const initialState: WealthManagementState = {
-  tree: createInitialTree(),
+  flows: {
+    'flow-1': {
+      id: 'flow-1',
+      name: 'Estate Plan',
+      createdAt: Date.now(),
+      tree: createInitialTree(),
+    },
+  },
+  assets: {},
+  assetNodeLinks: {},
+  nextFlowNum: 2,
+  nextAssetNum: 1,
 };
 
 const wealthManagementSlice = createSlice({
   name: 'wealthManagement',
   initialState,
   reducers: {
-    updateNodeAmount(state, action: PayloadAction<{ id: string; amount: number }>) {
-      const node = state.tree.nodes[action.payload.id];
-      if (node && node.isSource) {
-        node.amount = action.payload.amount;
-        recalculate(state.tree);
+    // --- Flow management ---
+    createFlow(state, action: PayloadAction<{ name: string }>) {
+      const id = `flow-${state.nextFlowNum}`;
+      state.nextFlowNum += 1;
+      state.flows[id] = {
+        id,
+        name: action.payload.name,
+        createdAt: Date.now(),
+        tree: createInitialTree(),
+      };
+    },
+
+    deleteFlow(state, action: PayloadAction<{ flowId: string }>) {
+      const flow = state.flows[action.payload.flowId];
+      if (!flow) return;
+      const nodeIds = new Set(Object.keys(flow.tree.nodes));
+      cleanupLinksForNodes(state.assetNodeLinks, nodeIds);
+      delete state.flows[action.payload.flowId];
+    },
+
+    renameFlow(state, action: PayloadAction<{ flowId: string; name: string }>) {
+      const flow = state.flows[action.payload.flowId];
+      if (flow) flow.name = action.payload.name;
+    },
+
+    // --- Asset management ---
+    createAsset(state, action: PayloadAction<{ name: string; category: string; estimatedValue: number }>) {
+      const id = `asset-${state.nextAssetNum}`;
+      state.nextAssetNum += 1;
+      state.assets[id] = {
+        id,
+        name: action.payload.name,
+        category: action.payload.category,
+        estimatedValue: action.payload.estimatedValue,
+      };
+    },
+
+    deleteAsset(state, action: PayloadAction<{ assetId: string }>) {
+      delete state.assets[action.payload.assetId];
+      for (const linkKey of Object.keys(state.assetNodeLinks)) {
+        if (state.assetNodeLinks[linkKey].assetId === action.payload.assetId) {
+          delete state.assetNodeLinks[linkKey];
+        }
       }
     },
 
-    updateNodeLabel(state, action: PayloadAction<{ id: string; label: string }>) {
-      const node = state.tree.nodes[action.payload.id];
+    linkAssetToNode(state, action: PayloadAction<{ assetId: string; nodeId: string }>) {
+      const key = `${action.payload.assetId}:${action.payload.nodeId}`;
+      state.assetNodeLinks[key] = {
+        assetId: action.payload.assetId,
+        nodeId: action.payload.nodeId,
+      };
+    },
+
+    unlinkAssetFromNode(state, action: PayloadAction<{ assetId: string; nodeId: string }>) {
+      const key = `${action.payload.assetId}:${action.payload.nodeId}`;
+      delete state.assetNodeLinks[key];
+    },
+
+    // --- Tree mutations (all require flowId) ---
+    updateNodeAmount(state, action: PayloadAction<{ flowId: string; id: string; amount: number }>) {
+      const flow = state.flows[action.payload.flowId];
+      if (!flow) return;
+      const node = flow.tree.nodes[action.payload.id];
+      if (node && node.isSource) {
+        node.amount = action.payload.amount;
+        recalculate(flow.tree);
+      }
+    },
+
+    updateNodeLabel(state, action: PayloadAction<{ flowId: string; id: string; label: string }>) {
+      const flow = state.flows[action.payload.flowId];
+      if (!flow) return;
+      const node = flow.tree.nodes[action.payload.id];
       if (node) {
         node.label = action.payload.label;
       }
     },
 
-    addSourceNode(state) {
-      const newId = `node-${state.tree.nextNodeNum}`;
-      state.tree.nextNodeNum += 1;
+    addSourceNode(state, action: PayloadAction<{ flowId: string }>) {
+      const flow = state.flows[action.payload.flowId];
+      if (!flow) return;
+      const newId = `node-${flow.tree.nextNodeNum}`;
+      flow.tree.nextNodeNum += 1;
 
-      state.tree.nodes[newId] = {
+      flow.tree.nodes[newId] = {
         id: newId,
-        label: `Source ${Object.values(state.tree.nodes).filter((n) => n.isSource).length + 1}`,
+        label: `Source ${Object.values(flow.tree.nodes).filter((n) => n.isSource).length + 1}`,
         amount: 0,
         splitMode: 'percentage',
         isSource: true,
       };
     },
 
-    addChildNode(state, action: PayloadAction<{ parentId: string }>) {
+    addChildNode(state, action: PayloadAction<{ flowId: string; parentId: string }>) {
+      const flow = state.flows[action.payload.flowId];
+      if (!flow) return;
       const { parentId } = action.payload;
-      const parent = state.tree.nodes[parentId];
+      const parent = flow.tree.nodes[parentId];
       if (!parent) return;
 
-      const newId = `node-${state.tree.nextNodeNum}`;
-      state.tree.nextNodeNum += 1;
+      const newId = `node-${flow.tree.nextNodeNum}`;
+      flow.tree.nextNodeNum += 1;
 
-      // Create the child node (non-source, amount computed from parents)
-      state.tree.nodes[newId] = {
+      flow.tree.nodes[newId] = {
         id: newId,
-        label: `Beneficiary ${state.tree.nextNodeNum - 1}`,
+        label: `Beneficiary ${flow.tree.nextNodeNum - 1}`,
         amount: 0,
         splitMode: 'percentage',
         isSource: false,
       };
 
-      // Create edge
       const edgeId = `edge-${parentId}-${newId}`;
-      state.tree.edges[edgeId] = {
+      flow.tree.edges[edgeId] = {
         id: edgeId,
         sourceId: parentId,
         targetId: newId,
@@ -181,8 +274,7 @@ const wealthManagementSlice = createSlice({
         exactAmount: 0,
       };
 
-      // Redistribute evenly among all children of this parent
-      const siblingEdges = Object.values(state.tree.edges).filter((e) => e.sourceId === parentId);
+      const siblingEdges = Object.values(flow.tree.edges).filter((e) => e.sourceId === parentId);
       const count = siblingEdges.length;
       const evenPercent = Math.round((100 / count) * 100) / 100;
       const evenAmount = Math.round((parent.amount / count) * 100) / 100;
@@ -192,25 +284,24 @@ const wealthManagementSlice = createSlice({
         edge.exactAmount = evenAmount;
       }
 
-      recalculate(state.tree);
+      recalculate(flow.tree);
     },
 
-    // Connect two existing nodes (drag handle connection)
-    connectNodes(state, action: PayloadAction<{ sourceId: string; targetId: string }>) {
+    connectNodes(state, action: PayloadAction<{ flowId: string; sourceId: string; targetId: string }>) {
+      const flow = state.flows[action.payload.flowId];
+      if (!flow) return;
       const { sourceId, targetId } = action.payload;
-      if (!state.tree.nodes[sourceId] || !state.tree.nodes[targetId]) return;
+      if (!flow.tree.nodes[sourceId] || !flow.tree.nodes[targetId]) return;
 
-      // Prevent cycles
-      if (wouldCreateCycle(state.tree, sourceId, targetId)) return;
+      if (wouldCreateCycle(flow.tree, sourceId, targetId)) return;
 
-      // Prevent duplicate edges
-      const existing = Object.values(state.tree.edges).find(
+      const existing = Object.values(flow.tree.edges).find(
         (e) => e.sourceId === sourceId && e.targetId === targetId
       );
       if (existing) return;
 
       const edgeId = `edge-${sourceId}-${targetId}`;
-      state.tree.edges[edgeId] = {
+      flow.tree.edges[edgeId] = {
         id: edgeId,
         sourceId,
         targetId,
@@ -218,15 +309,13 @@ const wealthManagementSlice = createSlice({
         exactAmount: 0,
       };
 
-      // Target is no longer a source if it now has incoming edges
-      const target = state.tree.nodes[targetId];
+      const target = flow.tree.nodes[targetId];
       if (target.isSource) {
         target.isSource = false;
       }
 
-      // Redistribute the source's outgoing edges evenly
-      const parent = state.tree.nodes[sourceId];
-      const siblingEdges = Object.values(state.tree.edges).filter((e) => e.sourceId === sourceId);
+      const parent = flow.tree.nodes[sourceId];
+      const siblingEdges = Object.values(flow.tree.edges).filter((e) => e.sourceId === sourceId);
       const count = siblingEdges.length;
       const evenPercent = Math.round((100 / count) * 100) / 100;
       const evenAmount = parent ? Math.round((parent.amount / count) * 100) / 100 : 0;
@@ -236,23 +325,22 @@ const wealthManagementSlice = createSlice({
         edge.exactAmount = evenAmount;
       }
 
-      recalculate(state.tree);
+      recalculate(flow.tree);
     },
 
-    removeNode(state, action: PayloadAction<{ id: string }>) {
+    removeNode(state, action: PayloadAction<{ flowId: string; id: string }>) {
+      const flow = state.flows[action.payload.flowId];
+      if (!flow) return;
       const nodeId = action.payload.id;
-      const node = state.tree.nodes[nodeId];
+      const node = flow.tree.nodes[nodeId];
       if (!node) return;
 
-      // Find parent edges (edges pointing to this node)
-      const parentEdges = Object.values(state.tree.edges).filter((e) => e.targetId === nodeId);
+      const parentEdges = Object.values(flow.tree.edges).filter((e) => e.targetId === nodeId);
 
-      // Collect all descendants that ONLY connect through this node
-      const descendantIds = getDescendantIds(state.tree, nodeId);
-      // Filter: only remove descendants that have no other path from a source
+      const descendantIds = getDescendantIds(flow.tree, nodeId);
       const toRemove = [nodeId];
       for (const descId of descendantIds) {
-        const incomingToDesc = Object.values(state.tree.edges).filter(
+        const incomingToDesc = Object.values(flow.tree.edges).filter(
           (e) => e.targetId === descId && !toRemove.includes(e.sourceId)
         );
         if (incomingToDesc.length === 0) {
@@ -260,26 +348,27 @@ const wealthManagementSlice = createSlice({
         }
       }
 
-      // Remove nodes and associated edges
+      // Clean up asset links for removed nodes
+      cleanupLinksForNodes(state.assetNodeLinks, new Set(toRemove));
+
       for (const id of toRemove) {
-        delete state.tree.nodes[id];
-        for (const [edgeId, edge] of Object.entries(state.tree.edges)) {
+        delete flow.tree.nodes[id];
+        for (const [edgeId, edge] of Object.entries(flow.tree.edges)) {
           if (edge.sourceId === id || edge.targetId === id) {
-            delete state.tree.edges[edgeId];
+            delete flow.tree.edges[edgeId];
           }
         }
       }
 
-      // Redistribute remaining siblings under each parent
       for (const parentEdge of parentEdges) {
         const parentId = parentEdge.sourceId;
-        if (!state.tree.nodes[parentId]) continue;
+        if (!flow.tree.nodes[parentId]) continue;
 
-        const remainingEdges = Object.values(state.tree.edges).filter((e) => e.sourceId === parentId);
+        const remainingEdges = Object.values(flow.tree.edges).filter((e) => e.sourceId === parentId);
         const count = remainingEdges.length;
 
         if (count > 0) {
-          const parent = state.tree.nodes[parentId];
+          const parent = flow.tree.nodes[parentId];
           const evenPercent = Math.round((100 / count) * 100) / 100;
           const evenAmount = parent ? Math.round((parent.amount / count) * 100) / 100 : 0;
 
@@ -290,16 +379,18 @@ const wealthManagementSlice = createSlice({
         }
       }
 
-      recalculate(state.tree);
+      recalculate(flow.tree);
     },
 
-    setSplitMode(state, action: PayloadAction<{ id: string; mode: SplitMode }>) {
-      const node = state.tree.nodes[action.payload.id];
+    setSplitMode(state, action: PayloadAction<{ flowId: string; id: string; mode: SplitMode }>) {
+      const flow = state.flows[action.payload.flowId];
+      if (!flow) return;
+      const node = flow.tree.nodes[action.payload.id];
       if (!node) return;
 
       node.splitMode = action.payload.mode;
 
-      const childEdges = Object.values(state.tree.edges).filter((e) => e.sourceId === node.id);
+      const childEdges = Object.values(flow.tree.edges).filter((e) => e.sourceId === node.id);
       const count = childEdges.length;
       if (count > 0) {
         const evenPercent = Math.round((100 / count) * 100) / 100;
@@ -310,20 +401,22 @@ const wealthManagementSlice = createSlice({
         }
       }
 
-      recalculate(state.tree);
+      recalculate(flow.tree);
     },
 
     updateEdgeSplit(
       state,
-      action: PayloadAction<{ edgeId: string; value: number }>
+      action: PayloadAction<{ flowId: string; edgeId: string; value: number }>
     ) {
-      const edge = state.tree.edges[action.payload.edgeId];
+      const flow = state.flows[action.payload.flowId];
+      if (!flow) return;
+      const edge = flow.tree.edges[action.payload.edgeId];
       if (!edge) return;
 
-      const parent = state.tree.nodes[edge.sourceId];
+      const parent = flow.tree.nodes[edge.sourceId];
       if (!parent) return;
 
-      const siblingEdges = Object.values(state.tree.edges).filter(
+      const siblingEdges = Object.values(flow.tree.edges).filter(
         (e) => e.sourceId === parent.id && e.id !== edge.id
       );
 
@@ -363,16 +456,27 @@ const wealthManagementSlice = createSlice({
         }
       }
 
-      recalculate(state.tree);
+      recalculate(flow.tree);
     },
 
-    resetTree(state) {
-      state.tree = createInitialTree();
+    resetTree(state, action: PayloadAction<{ flowId: string }>) {
+      const flow = state.flows[action.payload.flowId];
+      if (!flow) return;
+      const nodeIds = new Set(Object.keys(flow.tree.nodes));
+      cleanupLinksForNodes(state.assetNodeLinks, nodeIds);
+      flow.tree = createInitialTree();
     },
   },
 });
 
 export const {
+  createFlow,
+  deleteFlow,
+  renameFlow,
+  createAsset,
+  deleteAsset,
+  linkAssetToNode,
+  unlinkAssetFromNode,
   updateNodeAmount,
   updateNodeLabel,
   addSourceNode,

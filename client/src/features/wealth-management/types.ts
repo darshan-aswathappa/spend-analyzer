@@ -23,3 +23,22 @@ export interface WealthTreeState {
   edges: Record<string, WealthEdgeData>;
   nextNodeNum: number;
 }
+
+export interface WealthFlow {
+  id: string;
+  name: string;
+  createdAt: number;
+  tree: WealthTreeState;
+}
+
+export interface WealthAsset {
+  id: string;
+  name: string;
+  category: string;
+  estimatedValue: number;
+}
+
+export interface AssetNodeLink {
+  assetId: string;
+  nodeId: string;
+}

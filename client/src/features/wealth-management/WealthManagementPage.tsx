@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   ReactFlow,
   Background,
@@ -7,16 +9,18 @@ import {
   ReactFlowProvider,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Monitor } from 'lucide-react';
+import { Monitor, ChevronLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useWealthTree } from './useWealthTree';
 import { WealthNode } from './WealthNode';
 import { MoneyEdge } from './MoneyEdge';
 import { WealthToolbar } from './WealthToolbar';
+import type { RootState } from '@/app/store';
 
-function WealthManagementCanvas() {
+function WealthManagementCanvas({ flowId }: { flowId: string }) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, reset, addSource } =
-    useWealthTree();
+    useWealthTree(flowId);
   const { resolvedTheme } = useTheme();
 
   const nodeTypes = useMemo(() => ({ wealth: WealthNode }), []);
@@ -48,6 +52,17 @@ function WealthManagementCanvas() {
 }
 
 export function WealthManagementPage() {
+  const { flowId } = useParams<{ flowId: string }>();
+  const navigate = useNavigate();
+  const flow = useSelector((state: RootState) =>
+    flowId ? state.wealthManagement.flows[flowId] : undefined
+  );
+
+  if (!flowId || !flow) {
+    navigate('/wealth-management', { replace: true });
+    return null;
+  }
+
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col -m-4 md:-m-6">
       {/* Mobile blocker */}
@@ -66,8 +81,21 @@ export function WealthManagementPage() {
 
       {/* Desktop content */}
       <div className="hidden md:flex flex-1 relative">
+        {/* Back navigation */}
+        <div className="absolute top-4 left-4 z-10">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 bg-white dark:bg-gray-900 shadow-sm"
+            onClick={() => navigate('/wealth-management')}
+          >
+            <ChevronLeft className="w-4 h-4" />
+            {flow.name}
+          </Button>
+        </div>
+
         <ReactFlowProvider>
-          <WealthManagementCanvas />
+          <WealthManagementCanvas flowId={flowId} />
         </ReactFlowProvider>
       </div>
     </div>
