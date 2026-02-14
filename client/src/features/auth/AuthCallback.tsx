@@ -7,13 +7,29 @@ export function AuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
         navigate('/dashboard', { replace: true });
-      } else {
+      } else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
         navigate('/login', { replace: true });
       }
     });
+
+    // Fallback: if no event fires within 5s, check session directly
+    const timeout = setTimeout(() => {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session) {
+          navigate('/dashboard', { replace: true });
+        } else {
+          navigate('/login', { replace: true });
+        }
+      });
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, [navigate]);
 
   return (
