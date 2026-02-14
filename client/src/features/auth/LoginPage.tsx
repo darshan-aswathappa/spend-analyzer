@@ -1,18 +1,25 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
+import apiClient from '@/lib/apiClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { Mail, Chrome, Loader2 } from 'lucide-react';
+
+const DEMO_EMAIL = 'demo@spendanalyzer.com';
+const DEMO_PASSWORD = 'demo123456';
 
 type Mode = 'login' | 'signup' | 'magic';
 
-export function LoginPage() {
+export function LoginPage({ demo = false }: { demo?: boolean }) {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(demo ? DEMO_EMAIL : '');
+  const [password, setPassword] = useState(demo ? DEMO_PASSWORD : '');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -40,6 +47,17 @@ export function LoginPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+
+        // Seed demo data after successful demo login
+        if (demo) {
+          try {
+            await apiClient.post('/demo/seed');
+          } catch {
+            // Seed may fail if already seeded — that's fine
+          }
+          navigate('/dashboard', { replace: true });
+          return;
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Something went wrong';
@@ -75,11 +93,18 @@ export function LoginPage() {
 
         <Card>
           <CardHeader className="pb-4">
+            {demo && (
+              <Badge className="w-fit mb-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+                Demo Mode
+              </Badge>
+            )}
             <CardTitle className="text-lg">
               {mode === 'login' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Magic link'}
             </CardTitle>
             <CardDescription>
-              {mode === 'login'
+              {demo
+                ? 'Credentials are prefilled — just click Sign in'
+                : mode === 'login'
                 ? 'Welcome back to your dashboard'
                 : mode === 'signup'
                 ? 'Get started in seconds'
