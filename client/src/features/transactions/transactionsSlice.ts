@@ -5,6 +5,7 @@ interface TransactionsState {
   items: Transaction[];
   summary: TransactionSummary | null;
   total: number;
+  page: number;
   loading: boolean;
   error: string | null;
   filters: {
@@ -19,6 +20,7 @@ const initialState: TransactionsState = {
   items: [],
   summary: null,
   total: 0,
+  page: 0,
   loading: false,
   error: null,
   filters: {
@@ -49,15 +51,20 @@ const transactionsSlice = createSlice({
       state.error = action.payload;
       state.loading = false;
     },
+    setPage(state, action: PayloadAction<number>) {
+      state.page = action.payload;
+    },
     setFilter(state, action: PayloadAction<Partial<TransactionsState['filters']>>) {
       state.filters = { ...state.filters, ...action.payload };
+      state.page = 0;
     },
     clearFilters(state) {
       state.filters = initialState.filters;
+      state.page = 0;
     },
   },
 });
 
-export const { setTransactions, setSummary, setLoading, setError, setFilter, clearFilters } =
+export const { setTransactions, setSummary, setLoading, setError, setPage, setFilter, clearFilters } =
   transactionsSlice.actions;
 export default transactionsSlice.reducer;

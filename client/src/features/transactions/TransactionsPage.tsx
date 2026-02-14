@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import apiClient from '@/lib/apiClient';
 import type { AppDispatch, RootState } from '@/app/store';
-import { setTransactions, setLoading, setFilter, clearFilters } from './transactionsSlice';
+import { setTransactions, setLoading, setFilter, setPage, clearFilters } from './transactionsSlice';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TransactionTable } from './TransactionTable';
-import { X } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
+const PAGE_SIZE = 50;
 const CATEGORIES = [
   'Food & Dining', 'Shopping', 'Transport', 'Entertainment',
   'Health', 'Utilities', 'Rent & Housing', 'Travel', 'Income', 'Transfers', 'Other',
@@ -17,7 +18,7 @@ const CATEGORIES = [
 
 export function TransactionsPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { items, total, loading, filters } = useSelector((state: RootState) => state.transactions);
+  const { items, total, loading, filters, page } = useSelector((state: RootState) => state.transactions);
   const activeStatementId = useSelector((state: RootState) => state.statements.activeStatementId);
   const [search, setSearch] = useState('');
 
@@ -25,7 +26,10 @@ export function TransactionsPage() {
     async function load() {
       dispatch(setLoading(true));
       try {
-        const params = new URLSearchParams({ limit: '50' });
+        const params = new URLSearchParams({
+          limit: String(PAGE_SIZE),
+          offset: String(page * PAGE_SIZE),
+        });
         if (activeStatementId) params.set('statement_id', activeStatementId);
         if (filters.category) params.set('category', filters.category);
         if (filters.type) params.set('type', filters.type);
@@ -39,7 +43,9 @@ export function TransactionsPage() {
       }
     }
     load();
-  }, [dispatch, filters, activeStatementId]);
+  }, [dispatch, filters, activeStatementId, page]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const hasFilters = filters.category || filters.type || filters.from || filters.to;
 
@@ -121,6 +127,34 @@ export function TransactionsPage() {
       </Card>
 
       <TransactionTable transactions={filtered} loading={loading} />
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8"
+            disabled={page === 0}
+            onClick={() => dispatch(setPage(page - 1))}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Previous
+          </Button>
+          <span className="text-sm text-gray-500">
+            Page {page + 1} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8"
+            disabled={page >= totalPages - 1}
+            onClick={() => dispatch(setPage(page + 1))}
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
