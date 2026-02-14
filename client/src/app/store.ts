@@ -3,6 +3,7 @@ import authReducer from '@/features/auth/authSlice';
 import transactionsReducer from '@/features/transactions/transactionsSlice';
 import statementsReducer from '@/features/statements/statementsSlice';
 import chatReducer from '@/features/chat/chatSlice';
+import analyticsReducer from '@/features/analytics/analyticsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     transactions: transactionsReducer,
     statements: statementsReducer,
     chat: chatReducer,
+    analytics: analyticsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -32,6 +32,20 @@ export function formatRelativeDate(dateStr: string): string {
   return formatDate(dateStr);
 }
 
+export const CATEGORY_HEX_COLORS: Record<string, string> = {
+  'Food & Dining': '#f97316',
+  Shopping: '#a855f7',
+  Transport: '#3b82f6',
+  Entertainment: '#ec4899',
+  Health: '#22c55e',
+  Utilities: '#eab308',
+  'Rent & Housing': '#6366f1',
+  Travel: '#06b6d4',
+  Income: '#10b981',
+  Transfers: '#6b7280',
+  Other: '#64748b',
+};
+
 export const CATEGORY_COLORS: Record<string, string> = {
   'Food & Dining': 'bg-orange-100 text-orange-700',
   Shopping: 'bg-purple-100 text-purple-700',

@@ -7,6 +7,7 @@ import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { TransactionsPage } from '@/features/transactions/TransactionsPage';
 import { StatementsPage } from '@/features/statements/StatementsPage';
 import { ChatPage } from '@/features/chat/ChatPage';
+import { AnalyticsPage } from '@/features/analytics/AnalyticsPage';
 
 export function AppRoutes() {
   return (
@@ -24,6 +25,7 @@ export function AppRoutes() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/transactions" element={<TransactionsPage />} />
         <Route path="/statements" element={<StatementsPage />} />
+        <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/chat" element={<ChatPage />} />
       </Route>
 

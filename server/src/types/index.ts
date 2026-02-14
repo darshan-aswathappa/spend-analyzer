@@ -45,3 +45,46 @@ export interface ChatMessage {
   content: string;
   created_at: string;
 }
+
+export interface MonthlyTrend {
+  month: string;
+  totalDebits: number;
+  totalCredits: number;
+  net: number;
+}
+
+export interface CategoryBreakdown {
+  category: string;
+  total: number;
+}
+
+export interface TrendsResponse {
+  monthly: MonthlyTrend[];
+  byCategory: CategoryBreakdown[];
+}
+
+export interface MonthlyReportCategory {
+  category: string;
+  amount: number;
+  percentage: number;
+  transactionCount: number;
+}
+
+export interface MonthlyReportResponse {
+  month: string;
+  summary: { totalCredits: number; totalDebits: number; balance: number };
+  byCategory: MonthlyReportCategory[];
+  topTransactions: Array<{ date: string; description: string; amount: number; category: string; type: string }>;
+  transactionCount: number;
+}
+
+export interface ProjectionsResponse {
+  projectedMonth: string;
+  projectedSpending: Record<string, number>;
+  projectedIncome: number;
+  projectedExpenses: number;
+  projectedNetWorth: number;
+  currentBalance: number;
+  confidence: 'low' | 'medium' | 'high';
+  reasoning: string;
+}

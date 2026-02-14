@@ -44,3 +44,46 @@ export interface User {
   full_name?: string;
   avatar_url?: string;
 }
+
+export interface MonthlyTrend {
+  month: string;
+  totalDebits: number;
+  totalCredits: number;
+  net: number;
+}
+
+export interface CategoryBreakdown {
+  category: string;
+  total: number;
+}
+
+export interface TrendsData {
+  monthly: MonthlyTrend[];
+  byCategory: CategoryBreakdown[];
+}
+
+export interface ProjectionsData {
+  projectedMonth: string;
+  projectedSpending: Record<string, number>;
+  projectedIncome: number;
+  projectedExpenses: number;
+  projectedNetWorth: number;
+  currentBalance: number;
+  confidence: 'low' | 'medium' | 'high';
+  reasoning: string;
+}
+
+export interface MonthlyReportCategory {
+  category: string;
+  amount: number;
+  percentage: number;
+  transactionCount: number;
+}
+
+export interface MonthlyReportData {
+  month: string;
+  summary: { totalCredits: number; totalDebits: number; balance: number };
+  byCategory: MonthlyReportCategory[];
+  topTransactions: Array<{ date: string; description: string; amount: number; category: string; type: string }>;
+  transactionCount: number;
+}
