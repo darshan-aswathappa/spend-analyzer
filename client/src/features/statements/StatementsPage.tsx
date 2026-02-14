@@ -1,0 +1,203 @@
+import { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import apiClient from '@/lib/apiClient';
+import type { AppDispatch, RootState } from '@/app/store';
+import { setStatements, addStatement, removeStatement, setUploading, setError } from './statementsSlice';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Upload, FileText, Trash2, Loader2, CheckCircle } from 'lucide-react';
+import { formatDate, cn } from '@/lib/utils';
+import type { BankStatement } from '@/types';
+
+export function StatementsPage() {
+  const dispatch = useDispatch<AppDispatch>();
+  const { items, loading, uploading, error } = useSelector((state: RootState) => state.statements);
+  const [dragOver, setDragOver] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await apiClient.get('/statements');
+        dispatch(setStatements(res.data));
+      } catch {
+        // silent
+      }
+    }
+    load();
+  }, [dispatch]);
+
+  async function handleUpload(file: File) {
+    if (!file || file.type !== 'application/pdf') {
+      dispatch(setError('Please upload a PDF file.'));
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      dispatch(setError('File must be under 20MB.'));
+      return;
+    }
+
+    dispatch(setUploading(true));
+    setUploadSuccess(null);
+
+    const formData = new FormData();
+    formData.append('statement', file);
+
+    try {
+      const res = await apiClient.post('/statements/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120_000, // 2 min — GPT-4o can be slow
+      });
+      dispatch(addStatement(res.data.statement));
+      const count = res.data.transactionCount ?? 0;
+      setUploadSuccess(`Parsed ${count} transaction${count !== 1 ? 's' : ''} from ${file.name}`);
+    } catch (err: unknown) {
+      // Extract server error message from Axios response body if available
+      const axiosErr = err as { response?: { data?: { error?: string } }; message?: string };
+      const msg =
+        axiosErr?.response?.data?.error ||
+        axiosErr?.message ||
+        'Upload failed';
+      dispatch(setError(msg));
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await apiClient.delete(`/statements/${id}`);
+      dispatch(removeStatement(id));
+    } catch {
+      // silent
+    }
+  }
+
+  function onDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleUpload(file);
+  }
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      <div>
+        <h2 className="text-sm font-semibold text-gray-900 mb-3">Upload statement</h2>
+
+        {/* Drop zone */}
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={onDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={cn(
+            'border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors',
+            dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+          )}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleUpload(file);
+              e.target.value = '';
+            }}
+          />
+
+          {uploading ? (
+            <div className="flex flex-col items-center gap-2">
+              <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
+              <p className="text-sm text-gray-600">Parsing with AI...</p>
+              <p className="text-xs text-gray-400">This may take 20–60 seconds for scanned documents</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-1">
+                <Upload className="h-5 w-5 text-blue-600" />
+              </div>
+              <p className="text-sm font-medium text-gray-900">
+                Drop PDF here or click to browse
+              </p>
+              <p className="text-xs text-gray-400">PDF bank statements only · Max 20MB</p>
+            </div>
+          )}
+        </div>
+
+        {uploadSuccess && (
+          <div className="flex items-center gap-2 mt-3 text-sm text-emerald-700 bg-emerald-50 px-4 py-2.5 rounded-lg">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            {uploadSuccess}
+          </div>
+        )}
+
+        {error && (
+          <p className="mt-3 text-sm text-red-600 bg-red-50 px-4 py-2.5 rounded-lg">{error}</p>
+        )}
+      </div>
+
+      {/* Statements list */}
+      <div>
+        <h2 className="text-sm font-semibold text-gray-900 mb-3">Uploaded statements</h2>
+        {loading ? (
+          <div className="space-y-2">
+            {[0, 1].map((i) => (
+              <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <Card>
+            <CardContent className="py-10 text-center text-sm text-gray-400">
+              No statements uploaded yet
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-2">
+            {items.map((stmt) => (
+              <StatementRow key={stmt.id} statement={stmt} onDelete={handleDelete} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StatementRow({ statement, onDelete }: { statement: BankStatement; onDelete: (id: string) => void }) {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-4 p-4">
+        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
+          <FileText className="h-4 w-4 text-gray-500" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900 truncate">{statement.filename}</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            {statement.bank_name && (
+              <Badge variant="secondary" className="text-xs">{statement.bank_name}</Badge>
+            )}
+            {statement.statement_period_start && statement.statement_period_end && (
+              <span className="text-xs text-gray-400">
+                {formatDate(statement.statement_period_start)} – {formatDate(statement.statement_period_end)}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="text-xs text-gray-400">{formatDate(statement.uploaded_at)}</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-gray-400 hover:text-red-600"
+            onClick={() => onDelete(statement.id)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
