@@ -15,6 +15,11 @@
   "type": "commonjs",
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
+    "@types/amqplib": "^0.10.8",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/multer": "^2.0.0",
+    "@types/pdf-parse": "^1.1.5",
     "amqplib": "^0.10.9",
     "canvas": "^3.2.1",
     "cors": "^2.8.6",
@@ -24,15 +29,10 @@
     "multer": "^2.0.2",
     "openai": "^6.21.0",
     "pdf-parse": "^1.1.1",
-    "pdfjs-dist": "^2.16.105"
+    "pdfjs-dist": "^2.16.105",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "@types/amqplib": "^0.10.8",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/multer": "^2.0.0",
-    "@types/pdf-parse": "^1.1.5",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.3"
+    "ts-node-dev": "^2.0.0"
   }
 }

@@ -48,11 +48,11 @@ export function IncomeVsExpensesChart({ data }: Props) {
               width={50}
             />
             <Tooltip
-              formatter={(value: number, name: string) => [
+              formatter={((value: number, name: string) => [
                 formatCurrency(value),
                 name,
-              ]}
-              labelFormatter={formatMonth}
+              ]) as never}
+              labelFormatter={(label) => formatMonth(String(label))}
               contentStyle={{
                 borderRadius: '8px',
                 border: '1px solid #e2e8f0',

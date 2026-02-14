@@ -56,7 +56,7 @@ export function ScoreHistoryChart({ data }: ScoreHistoryChartProps) {
               border: '1px solid #e5e7eb',
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             }}
-            formatter={(value: number) => [`${value} / 100`, 'Risk Score']}
+            formatter={((value: number) => [`${value} / 100`, 'Risk Score']) as never}
           />
           <Line
             type="monotone"

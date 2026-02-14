@@ -38,10 +38,10 @@ export function CategoryPieChart({ data }: Props) {
               ))}
             </Pie>
             <Tooltip
-              formatter={(value: number, name: string) => [
+              formatter={((value: number, name: string) => [
                 `${formatCurrency(value)} (${((value / total) * 100).toFixed(1)}%)`,
                 name,
-              ]}
+              ]) as never}
               contentStyle={{
                 borderRadius: '8px',
                 border: '1px solid #e2e8f0',
