@@ -107,15 +107,15 @@ export function RiskAssessmentPage() {
   if (loading) {
     return (
       <div className="p-6">
-        <h1 className="text-lg font-semibold text-gray-900 mb-6">Risk Assessment</h1>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Risk Assessment</h1>
         <div className="max-w-2xl mx-auto space-y-4">
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
-              className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse"
+              className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6 animate-pulse"
             >
-              <div className="h-4 w-40 bg-gray-200 rounded mb-3" />
-              <div className="h-3 w-64 bg-gray-100 rounded" />
+              <div className="h-4 w-40 bg-gray-200 dark:bg-gray-700 rounded mb-3" />
+              <div className="h-3 w-64 bg-gray-100 dark:bg-gray-800 rounded" />
             </div>
           ))}
         </div>
@@ -126,9 +126,9 @@ export function RiskAssessmentPage() {
   if (error && !onboardingChecked) {
     return (
       <div className="p-6">
-        <h1 className="text-lg font-semibold text-gray-900 mb-6">Risk Assessment</h1>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <p className="text-sm text-red-600">{error}</p>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Risk Assessment</h1>
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 rounded-xl p-6 text-center">
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         </div>
       </div>
     );

@@ -69,14 +69,14 @@ export function ReportGenerator() {
   }, [month]);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
+    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+      <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">
         Download Report
       </h3>
 
       <div className="flex items-end gap-3">
         <div className="flex-1">
-          <label htmlFor="report-month" className="block text-sm text-gray-600 mb-1.5">
+          <label htmlFor="report-month" className="block text-sm text-gray-600 dark:text-gray-400 mb-1.5">
             Select Month
           </label>
           <input
@@ -84,7 +84,7 @@ export function ReportGenerator() {
             type="month"
             value={month}
             onChange={(e) => setMonth(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         <button
@@ -102,7 +102,7 @@ export function ReportGenerator() {
       </div>
 
       {error && (
-        <p className="mt-3 text-sm text-red-600 flex items-center gap-1.5">
+        <p className="mt-3 text-sm text-red-600 dark:text-red-400 flex items-center gap-1.5">
           <FileText className="h-3.5 w-3.5" />
           {error}
         </p>

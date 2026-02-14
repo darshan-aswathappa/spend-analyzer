@@ -58,12 +58,12 @@ export function AnalyticsPage() {
   if (loading) {
     return (
       <div className="p-6">
-        <h1 className="text-lg font-semibold text-gray-900 mb-6">Analytics</h1>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Analytics</h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 h-[340px] animate-pulse">
-              <div className="h-4 w-32 bg-gray-200 rounded mb-4" />
-              <div className="h-[280px] bg-gray-100 rounded" />
+            <div key={i} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-5 h-[340px] animate-pulse">
+              <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+              <div className="h-[280px] bg-gray-100 dark:bg-gray-800 rounded" />
             </div>
           ))}
         </div>
@@ -74,9 +74,9 @@ export function AnalyticsPage() {
   if (error) {
     return (
       <div className="p-6">
-        <h1 className="text-lg font-semibold text-gray-900 mb-6">Analytics</h1>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <p className="text-sm text-red-600">{error}</p>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Analytics</h1>
+        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 rounded-xl p-6 text-center">
+          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         </div>
       </div>
     );
@@ -84,7 +84,7 @@ export function AnalyticsPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-lg font-semibold text-gray-900 mb-6">Analytics</h1>
+      <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Analytics</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Charts */}

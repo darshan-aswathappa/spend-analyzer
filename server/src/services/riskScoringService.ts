@@ -396,3 +396,45 @@ export async function calculateRiskScore(userId: string, onboarding: RiskOnboard
     ai_tips: aiTips,
   };
 }
+
+/**
+ * Recalculates the risk score for a user and saves it to the database.
+ * Returns null if onboarding hasn't been completed (safe to call anytime).
+ */
+export async function recalculateAndSaveRiskScore(userId: string) {
+  const { data: onboarding, error: onbErr } = await supabase
+    .from('risk_onboarding')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  if (onbErr || !onboarding) {
+    return null;
+  }
+
+  const score = await calculateRiskScore(userId, onboarding as RiskOnboarding);
+
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  const { data: saved, error: saveErr } = await supabase
+    .from('risk_scores')
+    .insert({
+      user_id: userId,
+      overall_score: score.overall_score,
+      rating: score.rating,
+      sub_scores: score.sub_scores,
+      breakdown: score.breakdown,
+      ai_tips: score.ai_tips,
+      calculated_for_month: currentMonth,
+    })
+    .select()
+    .single();
+
+  if (saveErr) {
+    console.error('[RiskScore] Failed to save recalculated score:', saveErr.message);
+    return null;
+  }
+
+  return saved;
+}

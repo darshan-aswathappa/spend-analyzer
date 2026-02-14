@@ -3,6 +3,7 @@ import { supabase } from './config/supabase';
 import { extractTextFromPdf } from './services/pdfParser';
 import { parseTransactionsFromText, parseTransactionsFromImages } from './services/aiParser';
 import { pdfToBase64Images } from './services/pdfToImages';
+import { recalculateAndSaveRiskScore } from './services/riskScoringService';
 import { validateEnv } from './config/env';
 import fs from 'fs';
 
@@ -83,6 +84,24 @@ async function start() {
           transactionCount: transactions.length,
         },
       });
+
+      // Recalculate risk score with new transaction data
+      try {
+        const newScore = await recalculateAndSaveRiskScore(userId);
+        if (newScore) {
+          await supabase.from('notifications').insert({
+            user_id: userId,
+            type: 'risk_score_updated',
+            payload: {
+              overall_score: newScore.overall_score,
+              rating: newScore.rating,
+            },
+          });
+          console.log(`[Worker] Risk score recalculated for user ${userId}: ${newScore.overall_score}`);
+        }
+      } catch (riskErr) {
+        console.error('[Worker] Risk score recalculation failed:', riskErr);
+      }
 
       console.log(`[Worker] Completed ${statementId}: ${transactions.length} transactions`);
       channel.ack(msg);

@@ -97,7 +97,7 @@ export function StatementsPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h2 className="text-sm font-semibold text-gray-900 mb-3">Upload statement</h2>
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Upload statement</h2>
 
         {/* Drop zone */}
         <div
@@ -107,7 +107,7 @@ export function StatementsPage() {
           onClick={() => fileInputRef.current?.click()}
           className={cn(
             'border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors',
-            dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+            dragOver ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 hover:bg-gray-50 dark:hover:bg-gray-800'
           )}
         >
           <input
@@ -125,46 +125,46 @@ export function StatementsPage() {
           {uploading ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
-              <p className="text-sm text-gray-600">Parsing with AI...</p>
-              <p className="text-xs text-gray-400">This may take 20–60 seconds for scanned documents</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Parsing with AI...</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">This may take 20–60 seconds for scanned documents</p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-1">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-1">
                 <Upload className="h-5 w-5 text-blue-600" />
               </div>
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Drop PDF here or click to browse
               </p>
-              <p className="text-xs text-gray-400">PDF bank statements only · Max 20MB</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">PDF bank statements only · Max 20MB</p>
             </div>
           )}
         </div>
 
         {uploadSuccess && (
-          <div className="flex items-center gap-2 mt-3 text-sm text-emerald-700 bg-emerald-50 px-4 py-2.5 rounded-lg">
+          <div className="flex items-center gap-2 mt-3 text-sm text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-4 py-2.5 rounded-lg">
             <CheckCircle className="h-4 w-4 shrink-0" />
             {uploadSuccess}
           </div>
         )}
 
         {error && (
-          <p className="mt-3 text-sm text-red-600 bg-red-50 px-4 py-2.5 rounded-lg">{error}</p>
+          <p className="mt-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-4 py-2.5 rounded-lg">{error}</p>
         )}
       </div>
 
       {/* Statements list */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-900 mb-3">Uploaded statements</h2>
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Uploaded statements</h2>
         {loading ? (
           <div className="space-y-2">
             {[0, 1].map((i) => (
-              <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />
+              <div key={i} className="h-16 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
             ))}
           </div>
         ) : items.length === 0 ? (
           <Card>
-            <CardContent className="py-10 text-center text-sm text-gray-400">
+            <CardContent className="py-10 text-center text-sm text-gray-400 dark:text-gray-500">
               No statements uploaded yet
             </CardContent>
           </Card>
@@ -203,27 +203,27 @@ function StatementRow({
         <div className="flex items-start sm:items-center gap-3 sm:gap-4">
           <div className={cn(
             'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
-            isFailed ? 'bg-red-50' : isProcessing ? 'bg-amber-50' : 'bg-gray-100'
+            isFailed ? 'bg-red-50 dark:bg-red-900/30' : isProcessing ? 'bg-amber-50 dark:bg-amber-900/30' : 'bg-gray-100 dark:bg-gray-800'
           )}>
             {isProcessing ? (
               <Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
             ) : isFailed ? (
               <AlertCircle className="h-4 w-4 text-red-500" />
             ) : (
-              <FileText className="h-4 w-4 text-gray-500" />
+              <FileText className="h-4 w-4 text-gray-500 dark:text-gray-400" />
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{statement.filename}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{statement.filename}</p>
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-0.5">
               {isProcessing && (
-                <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-700">
+                <Badge variant="secondary" className="text-xs bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
                   <Clock className="h-3 w-3 mr-1" />
                   Processing...
                 </Badge>
               )}
               {isFailed && (
-                <Badge variant="secondary" className="text-xs bg-red-50 text-red-700">
+                <Badge variant="secondary" className="text-xs bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400">
                   Failed
                 </Badge>
               )}
@@ -231,12 +231,12 @@ function StatementRow({
                 <Badge variant="secondary" className="text-xs">{statement.bank_name}</Badge>
               )}
               {!isProcessing && !isFailed && statement.statement_period_start && statement.statement_period_end && (
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-gray-400 dark:text-gray-500">
                   {formatDate(statement.statement_period_start)} – {formatDate(statement.statement_period_end)}
                 </span>
               )}
               {isFailed && statement.processing_error && (
-                <span className="text-xs text-red-500 truncate">{statement.processing_error}</span>
+                <span className="text-xs text-red-500 dark:text-red-400 truncate">{statement.processing_error}</span>
               )}
             </div>
           </div>
@@ -244,7 +244,7 @@ function StatementRow({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-gray-400 hover:text-red-600 shrink-0"
+            className="h-7 w-7 text-gray-400 dark:text-gray-500 hover:text-red-600 shrink-0"
             onClick={() => onDelete(statement.id)}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -254,12 +254,12 @@ function StatementRow({
         {!isProcessing && !isFailed && (
           <div className="flex items-center gap-2 mt-2 pl-11">
             {statement.is_default ? (
-              <Badge className="bg-blue-100 text-blue-700 text-xs">Active</Badge>
+              <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs">Active</Badge>
             ) : (
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 text-xs text-gray-500 hover:text-blue-600"
+                className="h-7 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600"
                 onClick={(e) => { e.stopPropagation(); onSetDefault(statement.id); }}
               >
                 Set as active

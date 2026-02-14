@@ -21,9 +21,9 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitive.Viewport.displayName;
 
 const toastVariants = {
-  default: 'border-gray-200 bg-white text-gray-900',
-  success: 'border-emerald-200 bg-emerald-50 text-emerald-900',
-  destructive: 'border-red-200 bg-red-50 text-red-900',
+  default: 'border-gray-200 bg-white text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100',
+  success: 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300',
+  destructive: 'border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-900/30 dark:text-red-300',
 };
 
 export type ToastVariant = keyof typeof toastVariants;

@@ -41,7 +41,7 @@ export function DashboardPage() {
           <BalanceSummary summary={summary} loading={loading} />
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-gray-900">Recent transactions</h2>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Recent transactions</h2>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/transactions" className="flex items-center gap-1 text-blue-600 text-xs">
                   View all <ArrowRight className="h-3 w-3" />
@@ -61,11 +61,11 @@ export function DashboardPage() {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center">
-      <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+      <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mb-4">
         <Upload className="h-5 w-5 text-blue-600" />
       </div>
-      <h2 className="text-base font-semibold text-gray-900 mb-1">No data yet</h2>
-      <p className="text-sm text-gray-500 mb-5 max-w-xs">
+      <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">No data yet</h2>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-5 max-w-xs">
         Upload a bank statement to see your balance and spending breakdown.
       </p>
       <Button asChild>

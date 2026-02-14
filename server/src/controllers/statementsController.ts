@@ -3,6 +3,7 @@ import fs from 'fs';
 import { AuthenticatedRequest } from '../types';
 import { supabase } from '../config/supabase';
 import { getRabbitChannel, getQueueName } from '../config/rabbitmq';
+import { recalculateAndSaveRiskScore } from '../services/riskScoringService';
 
 export async function uploadStatement(
   req: AuthenticatedRequest,
@@ -124,6 +125,23 @@ export async function deleteStatement(
           .update({ is_default: true })
           .eq('id', remaining[0].id);
       }
+    }
+
+    // Recalculate risk score since transactions were removed
+    try {
+      const newScore = await recalculateAndSaveRiskScore(req.userId);
+      if (newScore) {
+        await supabase.from('notifications').insert({
+          user_id: req.userId,
+          type: 'risk_score_updated',
+          payload: {
+            overall_score: newScore.overall_score,
+            rating: newScore.rating,
+          },
+        });
+      }
+    } catch (riskErr) {
+      console.error('[Statements] Risk score recalculation after delete failed:', riskErr);
     }
 
     res.json({ success: true });

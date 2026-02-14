@@ -100,7 +100,7 @@ export function TransactionsPage() {
             onChange={(e) => dispatch(setFilter({ from: e.target.value }))}
             className="h-8 text-sm w-[calc(50%-12px)] sm:w-36"
           />
-          <span className="text-xs text-gray-400">to</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">to</span>
           <Input
             type="date"
             value={filters.to}
@@ -112,7 +112,7 @@ export function TransactionsPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-xs text-gray-500"
+              className="h-8 text-xs text-gray-500 dark:text-gray-400"
               onClick={() => dispatch(clearFilters())}
             >
               <X className="h-3 w-3 mr-1" />
@@ -120,7 +120,7 @@ export function TransactionsPage() {
             </Button>
           )}
 
-          <span className="w-full sm:w-auto sm:ml-auto text-xs text-gray-400 text-center sm:text-right">
+          <span className="w-full sm:w-auto sm:ml-auto text-xs text-gray-400 dark:text-gray-500 text-center sm:text-right">
             {filtered.length} of {total} transactions
           </span>
         </CardContent>
@@ -140,7 +140,7 @@ export function TransactionsPage() {
             <ChevronLeft className="h-4 w-4 mr-1" />
             Previous
           </Button>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             Page {page + 1} of {totalPages}
           </span>
           <Button

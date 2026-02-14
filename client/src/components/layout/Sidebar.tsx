@@ -23,20 +23,20 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   }
 
   const sidebarContent = (
-    <aside className="w-56 flex flex-col h-full bg-white shrink-0">
+    <aside className="w-56 flex flex-col h-full bg-white dark:bg-gray-900 shrink-0">
       {/* Brand */}
-      <div className="flex items-center justify-between px-5 h-16 border-b border-gray-100">
+      <div className="flex items-center justify-between px-5 h-16 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center justify-center w-7 h-7 bg-blue-600 rounded-lg">
             <span className="text-white font-bold text-xs">SA</span>
           </div>
-          <span className="font-semibold text-gray-900 text-sm">SpendAnalyzer</span>
+          <span className="font-semibold text-gray-900 dark:text-gray-100 text-sm">SpendAnalyzer</span>
         </div>
         {/* Close button — mobile only */}
         {onClose && (
           <button
             onClick={onClose}
-            className="md:hidden p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            className="md:hidden p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-800"
           >
             <X className="h-5 w-5" />
           </button>
@@ -54,8 +54,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               cn(
                 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
                 isActive
-                  ? 'bg-blue-50 text-blue-700 font-medium'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-blue-50 text-blue-700 font-medium dark:bg-blue-900/30 dark:text-blue-400'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'
               )
             }
           >
@@ -69,7 +69,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="px-3 pb-4">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900 w-full transition-colors"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200 w-full transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           Sign out
@@ -81,7 +81,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <>
       {/* Desktop sidebar — always visible */}
-      <div className="hidden md:flex border-r border-gray-200">
+      <div className="hidden md:flex border-r border-gray-200 dark:border-gray-700">
         {sidebarContent}
       </div>
 

@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import type { RootState, AppDispatch } from '@/app/store';
 import { useToast } from '@/components/ui/toaster';
 import { updateStatementStatus } from '@/features/statements/statementsSlice';
+import { setScore } from '@/features/risk-assessment/riskAssessmentSlice';
 
 export function useNotifications() {
   const session = useSelector((state: RootState) => state.auth.session);
@@ -33,6 +34,13 @@ export function useNotifications() {
           title: 'Statement processed',
           description: `${data.payload.transactionCount} transactions extracted from ${data.payload.filename}. Ready to view.`,
           variant: 'success',
+        });
+      } else if (data.type === 'risk_score_updated') {
+        dispatch(setScore(null));
+        toast({
+          title: 'Risk score updated',
+          description: `Your risk score has been recalculated: ${data.payload.overall_score}/100 (${data.payload.rating}).`,
+          variant: 'default',
         });
       } else if (data.type === 'statement_failed') {
         dispatch(

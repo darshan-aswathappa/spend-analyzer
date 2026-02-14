@@ -144,8 +144,8 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
     <div className="max-w-2xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Spend Risk Assessment</h1>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Spend Risk Assessment</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Let's set up your financial profile to calculate your spending risk score
         </p>
       </div>
@@ -161,14 +161,14 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
                     ? 'bg-blue-600 text-white'
                     : i === step
                     ? 'bg-blue-600 text-white ring-4 ring-blue-100'
-                    : 'bg-gray-100 text-gray-400'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
                 }`}
               >
                 <s.icon className="h-4 w-4" />
               </div>
               <span
                 className={`text-xs mt-1.5 ${
-                  i <= step ? 'text-blue-600 font-medium' : 'text-gray-400'
+                  i <= step ? 'text-blue-600 font-medium' : 'text-gray-400 dark:text-gray-500'
                 }`}
               >
                 {s.title}
@@ -177,7 +177,7 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
             {i < STEPS.length - 1 && (
               <div
                 className={`w-6 sm:w-12 h-0.5 mx-0.5 sm:mx-1 mt-[-18px] ${
-                  i < step ? 'bg-blue-600' : 'bg-gray-200'
+                  i < step ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
                 }`}
               />
             )}
@@ -186,19 +186,19 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
       </div>
 
       {/* Step Content */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-1">{STEPS[step].title}</h2>
-        <p className="text-sm text-gray-500 mb-6">{STEPS[step].description}</p>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">{STEPS[step].title}</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{STEPS[step].description}</p>
 
         {/* Step 1: Income */}
         {step === 0 && (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="income" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="income" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Monthly Income
               </Label>
               <div className="relative mt-1.5">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">$</span>
                 <Input
                   id="income"
                   type="number"
@@ -209,12 +209,12 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
                   min={0}
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                 Your gross monthly income from all sources
               </p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-gray-700">Income Source</Label>
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Income Source</Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
                 {INCOME_SOURCES.map((src) => (
                   <button
@@ -223,8 +223,8 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
                     onClick={() => setIncomeSource(src.value as any)}
                     className={`px-3 py-2.5 rounded-lg border text-sm text-left transition-colors ${
                       incomeSource === src.value
-                        ? 'border-blue-600 bg-blue-50 text-blue-700 font-medium'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-medium'
+                        : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
                     }`}
                   >
                     {src.label}
@@ -247,7 +247,7 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
                   className="flex-1 min-w-0"
                 />
                 <div className="relative w-24 sm:w-28">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">
                     $
                   </span>
                   <Input
@@ -279,7 +279,7 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
                 <button
                   type="button"
                   onClick={() => removeObligation(i)}
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors shrink-0"
+                  className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 transition-colors shrink-0"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -289,7 +289,7 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
               <Plus className="h-3.5 w-3.5" />
               Add Obligation
             </Button>
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
               Add your recurring monthly expenses like rent, loan EMIs, insurance, and subscriptions
             </p>
           </div>
@@ -299,7 +299,7 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
         {step === 2 && (
           <div className="space-y-5">
             <div>
-              <Label className="text-sm font-medium text-gray-700">Savings Target</Label>
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Savings Target</Label>
               <div className="flex items-center gap-4 mt-2">
                 <input
                   type="range"
@@ -313,12 +313,12 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
                   {savingsTarget}%
                 </span>
               </div>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                 The 50/30/20 rule recommends saving at least 20% of income
               </p>
             </div>
             <div>
-              <Label className="text-sm font-medium text-gray-700">Primary Financial Goal</Label>
+              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Primary Financial Goal</Label>
               <div className="grid grid-cols-1 gap-2 mt-2">
                 {GOALS.map((goal) => (
                   <button
@@ -327,18 +327,18 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
                     onClick={() => setPrimaryGoal(goal.value as any)}
                     className={`px-4 py-3 rounded-lg border text-left transition-colors ${
                       primaryGoal === goal.value
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                     }`}
                   >
                     <span
                       className={`text-sm font-medium ${
-                        primaryGoal === goal.value ? 'text-blue-700' : 'text-gray-900'
+                        primaryGoal === goal.value ? 'text-blue-700 dark:text-blue-400' : 'text-gray-900 dark:text-gray-100'
                       }`}
                     >
                       {goal.label}
                     </span>
-                    <p className="text-xs text-gray-500 mt-0.5">{goal.description}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{goal.description}</p>
                   </button>
                 ))}
               </div>
@@ -349,7 +349,7 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
         {/* Step 4: Category Preferences */}
         {step === 3 && (
           <div>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Select which spending categories you consider <strong>essential needs</strong>.
               Everything else will be treated as discretionary wants.
             </p>
@@ -361,15 +361,15 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
                   onClick={() => toggleCategory(cat)}
                   className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-sm transition-colors ${
                     essentialCategories.includes(cat)
-                      ? 'border-blue-600 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                      ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   <div
                     className={`w-4 h-4 rounded border flex items-center justify-center ${
                       essentialCategories.includes(cat)
                         ? 'bg-blue-600 border-blue-600'
-                        : 'border-gray-300'
+                        : 'border-gray-300 dark:border-gray-600'
                     }`}
                   >
                     {essentialCategories.includes(cat) && (
@@ -386,13 +386,13 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
         )}
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mt-8 pt-4 border-t border-gray-100">
+        <div className="flex items-center justify-between mt-8 pt-4 border-t border-gray-100 dark:border-gray-800">
           <Button
             variant="ghost"
             onClick={() => setStep(step - 1)}

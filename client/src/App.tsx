@@ -8,6 +8,7 @@ import { setSession } from './features/auth/authSlice';
 import type { AppDispatch } from './app/store';
 import { Toaster } from './components/ui/toaster';
 import { useNotifications } from './hooks/useNotifications';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch<AppDispatch>();
@@ -34,15 +35,17 @@ function NotificationListener() {
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <BrowserRouter>
-        <Toaster>
-          <AuthProvider>
-            <NotificationListener />
-            <AppRoutes />
-          </AuthProvider>
-        </Toaster>
-      </BrowserRouter>
-    </Provider>
+    <ThemeProvider>
+      <Provider store={store}>
+        <BrowserRouter>
+          <Toaster>
+            <AuthProvider>
+              <NotificationListener />
+              <AppRoutes />
+            </AuthProvider>
+          </Toaster>
+        </BrowserRouter>
+      </Provider>
+    </ThemeProvider>
   );
 }

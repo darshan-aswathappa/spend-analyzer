@@ -9,6 +9,7 @@ import {
   Legend,
 } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
+import { useTheme } from '@/contexts/ThemeContext';
 import type { MonthlyTrend } from '@/types';
 
 interface Props {
@@ -22,27 +23,32 @@ function formatMonth(month: string) {
 }
 
 export function MonthlySpendingChart({ data }: Props) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === 'dark';
+  const gridColor = isDark ? '#1f2937' : '#f1f5f9';
+  const tickColor = isDark ? '#9ca3af' : '#94a3b8';
+
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4">
+    <div className="bg-white rounded-xl border border-gray-200 p-5 dark:bg-gray-900 dark:border-gray-700">
+      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-4 dark:text-gray-400">
         Monthly Income vs Expenses
       </h3>
       {data.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-12">No data available</p>
+        <p className="text-sm text-gray-400 text-center py-12 dark:text-gray-500">No data available</p>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data} barGap={4}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
             <XAxis
               dataKey="month"
               tickFormatter={formatMonth}
-              tick={{ fontSize: 12, fill: '#94a3b8' }}
+              tick={{ fontSize: 12, fill: tickColor }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
-              tick={{ fontSize: 12, fill: '#94a3b8' }}
+              tick={{ fontSize: 12, fill: tickColor }}
               axisLine={false}
               tickLine={false}
               width={50}
@@ -55,12 +61,14 @@ export function MonthlySpendingChart({ data }: Props) {
               labelFormatter={(label) => formatMonth(String(label))}
               contentStyle={{
                 borderRadius: '8px',
-                border: '1px solid #e2e8f0',
+                border: `1px solid ${isDark ? '#374151' : '#e2e8f0'}`,
+                backgroundColor: isDark ? '#111827' : '#ffffff',
+                color: isDark ? '#e5e7eb' : '#111827',
                 boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
               }}
             />
             <Legend
-              wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }}
+              wrapperStyle={{ fontSize: '12px', paddingTop: '8px', color: isDark ? '#d1d5db' : undefined }}
             />
             <Bar dataKey="totalCredits" fill="#22c55e" name="Income" radius={[4, 4, 0, 0]} />
             <Bar dataKey="totalDebits" fill="#ef4444" name="Expenses" radius={[4, 4, 0, 0]} />

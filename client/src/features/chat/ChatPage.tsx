@@ -139,14 +139,14 @@ export function ChatPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-900">Ask your finances</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Powered by your uploaded transactions</p>
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Ask your finances</h2>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Powered by your uploaded transactions</p>
         </div>
         {messages.length > 0 && (
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs text-gray-400 h-7"
+            className="text-xs text-gray-400 dark:text-gray-500 h-7"
             onClick={handleClear}
           >
             <Trash2 className="h-3 w-3 mr-1" />
@@ -164,13 +164,13 @@ export function ChatPage() {
             </div>
           ) : messages.length === 0 && !streaming ? (
             <div className="flex flex-col items-center gap-4 py-10">
-              <p className="text-sm text-gray-500">Ask anything about your spending</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Ask anything about your spending</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}
                     onClick={() => handleSend(s)}
-                    className="text-left text-xs text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg px-3 py-2.5 transition-colors border border-gray-200"
+                    className="text-left text-xs text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-950 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg px-3 py-2.5 transition-colors border border-gray-200 dark:border-gray-700"
                   >
                     {s}
                   </button>
@@ -186,7 +186,7 @@ export function ChatPage() {
                 <AssistantBubble content={streamingContent} isStreaming />
               )}
               {streaming && !streamingContent && (
-                <div className="flex gap-2 items-center text-gray-400 text-sm">
+                <div className="flex gap-2 items-center text-gray-400 dark:text-gray-500 text-sm">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   <span>Thinking...</span>
                 </div>
@@ -241,9 +241,9 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 function AssistantBubble({ content, isStreaming }: { content: string; isStreaming?: boolean }) {
   return (
     <div className={cn('flex justify-start', isStreaming && 'opacity-90')}>
-      <div className="bg-gray-100 text-gray-900 rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%] text-sm whitespace-pre-wrap">
+      <div className="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%] text-sm whitespace-pre-wrap">
         {content}
-        {isStreaming && <span className="inline-block w-1 h-4 ml-0.5 bg-gray-400 animate-pulse rounded-sm align-middle" />}
+        {isStreaming && <span className="inline-block w-1 h-4 ml-0.5 bg-gray-400 dark:bg-gray-500 animate-pulse rounded-sm align-middle" />}
       </div>
     </div>
   );

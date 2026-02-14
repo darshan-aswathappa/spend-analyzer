@@ -33,8 +33,8 @@ export function AuthCallback() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="flex flex-col items-center gap-3 text-gray-500">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className="flex flex-col items-center gap-3 text-gray-500 dark:text-gray-400">
         <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
         <p className="text-sm">Completing sign in...</p>
       </div>

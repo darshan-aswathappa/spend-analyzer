@@ -62,15 +62,15 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-4">
       <div className="w-full max-w-md">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-600 rounded-xl mb-4">
             <span className="text-white font-bold text-sm">SA</span>
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900">SpendAnalyzer</h1>
-          <p className="text-sm text-gray-500 mt-1">Personal finance, clearly.</p>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">SpendAnalyzer</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Personal finance, clearly.</p>
         </div>
 
         <Card>
@@ -102,7 +102,7 @@ export function LoginPage() {
 
             <div className="relative">
               <Separator />
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-gray-400">
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-900 px-2 text-xs text-gray-400 dark:text-gray-500">
                 or
               </span>
             </div>
@@ -142,8 +142,8 @@ export function LoginPage() {
                 <p
                   className={`text-sm rounded-md px-3 py-2 ${
                     message.type === 'success'
-                      ? 'bg-emerald-50 text-emerald-700'
-                      : 'bg-red-50 text-red-700'
+                      ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                      : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                   }`}
                 >
                   {message.text}
@@ -167,7 +167,7 @@ export function LoginPage() {
             </form>
 
             {/* Mode switchers */}
-            <div className="flex flex-col gap-1.5 text-center text-sm text-gray-500">
+            <div className="flex flex-col gap-1.5 text-center text-sm text-gray-500 dark:text-gray-400">
               {mode === 'login' && (
                 <>
                   <button
