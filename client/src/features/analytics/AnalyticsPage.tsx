@@ -15,6 +15,7 @@ import { IncomeVsExpensesChart } from './IncomeVsExpensesChart';
 import { ProjectionCard } from './ProjectionCard';
 import { ReportGenerator } from './ReportGenerator';
 import type { TrendsData, ProjectionsData } from '@/types';
+import { Monitor } from 'lucide-react';
 
 export function AnalyticsPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -90,7 +91,21 @@ export function AnalyticsPage() {
     <div className="p-6">
       <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Analytics</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {/* Mobile blocker */}
+      <div className="flex md:hidden flex-col items-center justify-center text-center py-16 px-6">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-8 max-w-sm">
+          <Monitor className="w-12 h-12 text-primary-600 mx-auto mb-4" />
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            Desktop Recommended
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            The analytics dashboard is best experienced on a larger screen. Please switch to a desktop or tablet for the full experience.
+          </p>
+        </div>
+      </div>
+
+      {/* Desktop content */}
+      <div className="hidden md:grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Charts */}
         <MonthlySpendingChart data={trends?.monthly || []} />
         <CategoryPieChart data={trends?.byCategory || []} />
