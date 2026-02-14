@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ArrowLeftRight, FileText, MessageSquare, TrendingUp, LogOut } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, FileText, MessageSquare, TrendingUp, ShieldCheck, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { cn } from '@/lib/utils';
 
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
   { to: '/statements', icon: FileText, label: 'Statements' },
   { to: '/analytics', icon: TrendingUp, label: 'Analytics' },
+  { to: '/risk-assessment', icon: ShieldCheck, label: 'Risk Score' },
   { to: '/chat', icon: MessageSquare, label: 'Ask AI' },
 ];
 

@@ -100,6 +100,47 @@ CREATE POLICY "chat_messages: own data" ON chat_messages
 CREATE POLICY "notifications: own data" ON notifications
   FOR ALL USING (auth.uid() = user_id);
 
+-- Risk assessment onboarding
+CREATE TABLE IF NOT EXISTS risk_onboarding (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE REFERENCES profiles(id) ON DELETE CASCADE,
+  monthly_income NUMERIC(12, 2) NOT NULL,
+  income_source TEXT NOT NULL CHECK (income_source IN ('salaried', 'freelance', 'business', 'mixed')),
+  fixed_obligations JSONB NOT NULL DEFAULT '[]',
+  savings_target_percentage INTEGER NOT NULL DEFAULT 20,
+  primary_goal TEXT NOT NULL DEFAULT 'general_savings'
+    CHECK (primary_goal IN ('debt_payoff', 'emergency_fund', 'investment', 'retirement', 'general_savings')),
+  essential_categories TEXT[] NOT NULL DEFAULT ARRAY['Rent & Housing', 'Utilities', 'Transport', 'Health'],
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Risk assessment scores
+CREATE TABLE IF NOT EXISTS risk_scores (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  overall_score INTEGER NOT NULL CHECK (overall_score >= 0 AND overall_score <= 100),
+  rating TEXT NOT NULL CHECK (rating IN ('excellent', 'good', 'fair', 'poor', 'critical')),
+  sub_scores JSONB NOT NULL,
+  breakdown JSONB NOT NULL,
+  ai_tips TEXT[] NOT NULL DEFAULT '{}',
+  calculated_for_month TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_risk_onboarding_user_id ON risk_onboarding(user_id);
+CREATE INDEX IF NOT EXISTS idx_risk_scores_user_id ON risk_scores(user_id);
+CREATE INDEX IF NOT EXISTS idx_risk_scores_month ON risk_scores(user_id, calculated_for_month);
+
+ALTER TABLE risk_onboarding ENABLE ROW LEVEL SECURITY;
+ALTER TABLE risk_scores ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "risk_onboarding: own data" ON risk_onboarding
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "risk_scores: own data" ON risk_scores
+  FOR ALL USING (auth.uid() = user_id);
+
 -- Service role bypasses RLS (for backend inserts)
 -- This is handled automatically by using the service role key.
 

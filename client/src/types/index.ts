@@ -87,3 +87,59 @@ export interface MonthlyReportData {
   topTransactions: Array<{ date: string; description: string; amount: number; category: string; type: string }>;
   transactionCount: number;
 }
+
+export interface FixedObligation {
+  name: string;
+  amount: number;
+  category: string;
+}
+
+export interface RiskOnboarding {
+  id: string;
+  user_id: string;
+  monthly_income: number;
+  income_source: 'salaried' | 'freelance' | 'business' | 'mixed';
+  fixed_obligations: FixedObligation[];
+  savings_target_percentage: number;
+  primary_goal: 'debt_payoff' | 'emergency_fund' | 'investment' | 'retirement' | 'general_savings';
+  essential_categories: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RiskSubScores {
+  budget_adherence: number;
+  expense_to_income: number;
+  category_concentration: number;
+  spending_volatility: number;
+  recurring_vs_discretionary: number;
+  savings_rate: number;
+  trend_direction: number;
+}
+
+export interface RiskBreakdown {
+  needs_pct: number;
+  wants_pct: number;
+  savings_pct: number;
+  total_income: number;
+  total_expenses: number;
+  expense_to_income_ratio: number;
+  hhi_index: number;
+  volatility_cv: number;
+  discretionary_ratio: number;
+  actual_savings_rate: number;
+  spending_trend_slope: number;
+  months_analyzed: number;
+}
+
+export interface RiskScore {
+  id: string;
+  user_id: string;
+  overall_score: number;
+  rating: 'excellent' | 'good' | 'fair' | 'poor' | 'critical';
+  sub_scores: RiskSubScores;
+  breakdown: RiskBreakdown;
+  ai_tips: string[];
+  calculated_for_month: string;
+  created_at: string;
+}
