@@ -17,13 +17,27 @@ export async function streamChatResponse(
   userMessage: string,
   res: Response
 ): Promise<void> {
-  // Fetch recent transactions for context
-  const { data: transactions } = await supabase
+  // Get the user's default statement
+  const { data: defaultStmt } = await supabase
+    .from('bank_statements')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('is_default', true)
+    .single();
+
+  // Fetch recent transactions scoped to the default statement
+  let txQuery = supabase
     .from('transactions')
     .select('date, description, amount, type, category')
     .eq('user_id', userId)
     .order('date', { ascending: false })
     .limit(200);
+
+  if (defaultStmt?.id) {
+    txQuery = txQuery.eq('statement_id', defaultStmt.id);
+  }
+
+  const { data: transactions } = await txQuery;
 
   // Fetch recent chat history
   const { data: history } = await supabase

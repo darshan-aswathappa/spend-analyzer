@@ -37,6 +37,14 @@ export async function uploadStatement(
       ({ transactions, bankName, periodStart, periodEnd } = await parseTransactionsFromText(rawText));
     }
 
+    // Check if user has any existing statements (to auto-set default)
+    const { count } = await supabase
+      .from('bank_statements')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', req.userId);
+
+    const shouldBeDefault = count === 0;
+
     // Insert statement record
     const { data: statement, error: stmtError } = await supabase
       .from('bank_statements')
@@ -46,6 +54,7 @@ export async function uploadStatement(
         bank_name: bankName,
         statement_period_start: periodStart,
         statement_period_end: periodEnd,
+        is_default: shouldBeDefault,
       })
       .select()
       .single();
@@ -107,6 +116,15 @@ export async function deleteStatement(
 ): Promise<void> {
   try {
     const { id } = req.params;
+
+    // Check if the statement being deleted is the default
+    const { data: toDelete } = await supabase
+      .from('bank_statements')
+      .select('is_default')
+      .eq('id', id)
+      .eq('user_id', req.userId)
+      .single();
+
     const { error } = await supabase
       .from('bank_statements')
       .delete()
@@ -114,7 +132,55 @@ export async function deleteStatement(
       .eq('user_id', req.userId);
 
     if (error) throw error;
+
+    // If deleted statement was default, promote the most recent remaining one
+    if (toDelete?.is_default) {
+      const { data: remaining } = await supabase
+        .from('bank_statements')
+        .select('id')
+        .eq('user_id', req.userId)
+        .order('uploaded_at', { ascending: false })
+        .limit(1);
+
+      if (remaining && remaining.length > 0) {
+        await supabase
+          .from('bank_statements')
+          .update({ is_default: true })
+          .eq('id', remaining[0].id);
+      }
+    }
+
     res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function setDefaultStatement(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    // Unset all defaults for this user
+    await supabase
+      .from('bank_statements')
+      .update({ is_default: false })
+      .eq('user_id', req.userId);
+
+    // Set the chosen statement as default
+    const { data, error } = await supabase
+      .from('bank_statements')
+      .update({ is_default: true })
+      .eq('id', id)
+      .eq('user_id', req.userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json(data);
   } catch (err) {
     next(err);
   }

@@ -24,6 +24,7 @@ export interface BankStatement {
   statement_period_start: string | null;
   statement_period_end: string | null;
   uploaded_at: string;
+  is_default: boolean;
 }
 
 export interface ParsedTransaction {

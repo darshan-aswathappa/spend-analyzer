@@ -18,6 +18,7 @@ const CATEGORIES = [
 export function TransactionsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { items, total, loading, filters } = useSelector((state: RootState) => state.transactions);
+  const activeStatementId = useSelector((state: RootState) => state.statements.activeStatementId);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export function TransactionsPage() {
       dispatch(setLoading(true));
       try {
         const params = new URLSearchParams({ limit: '50' });
+        if (activeStatementId) params.set('statement_id', activeStatementId);
         if (filters.category) params.set('category', filters.category);
         if (filters.type) params.set('type', filters.type);
         if (filters.from) params.set('from', filters.from);
@@ -37,7 +39,7 @@ export function TransactionsPage() {
       }
     }
     load();
-  }, [dispatch, filters]);
+  }, [dispatch, filters, activeStatementId]);
 
   const hasFilters = filters.category || filters.type || filters.from || filters.to;
 

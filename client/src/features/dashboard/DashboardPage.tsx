@@ -12,14 +12,16 @@ import { Upload, ArrowRight } from 'lucide-react';
 export function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { items, summary, loading } = useSelector((state: RootState) => state.transactions);
+  const activeStatementId = useSelector((state: RootState) => state.statements.activeStatementId);
 
   useEffect(() => {
     async function load() {
       dispatch(setLoading(true));
       try {
+        const params = activeStatementId ? `&statement_id=${activeStatementId}` : '';
         const [txRes, sumRes] = await Promise.all([
-          apiClient.get('/transactions?limit=5'),
-          apiClient.get('/transactions/summary'),
+          apiClient.get(`/transactions?limit=5${params}`),
+          apiClient.get(`/transactions/summary${activeStatementId ? `?statement_id=${activeStatementId}` : ''}`),
         ]);
         dispatch(setTransactions(txRes.data));
         dispatch(setSummary(sumRes.data));
@@ -28,7 +30,7 @@ export function DashboardPage() {
       }
     }
     load();
-  }, [dispatch]);
+  }, [dispatch, activeStatementId]);
 
   const hasData = items.length > 0;
 

@@ -2,13 +2,28 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types';
 import { supabase } from '../config/supabase';
 
+async function resolveStatementId(userId: string, queryStatementId?: string): Promise<string | null> {
+  if (queryStatementId) return queryStatementId;
+
+  const { data } = await supabase
+    .from('bank_statements')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('is_default', true)
+    .single();
+
+  return data?.id || null;
+}
+
 export async function getTransactions(
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
-    const { category, type, from, to, limit = '100', offset = '0' } = req.query as Record<string, string>;
+    const { category, type, from, to, limit = '100', offset = '0', statement_id } = req.query as Record<string, string>;
+
+    const activeStatementId = await resolveStatementId(req.userId, statement_id);
 
     let query = supabase
       .from('transactions')
@@ -17,6 +32,7 @@ export async function getTransactions(
       .order('date', { ascending: false })
       .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
 
+    if (activeStatementId) query = query.eq('statement_id', activeStatementId);
     if (category) query = query.eq('category', category);
     if (type) query = query.eq('type', type);
     if (from) query = query.gte('date', from);
@@ -37,11 +53,17 @@ export async function getSummary(
   next: NextFunction
 ): Promise<void> {
   try {
-    const { data, error } = await supabase
+    const { statement_id } = req.query as Record<string, string>;
+    const activeStatementId = await resolveStatementId(req.userId, statement_id);
+
+    let query = supabase
       .from('transactions')
       .select('amount, type, category')
       .eq('user_id', req.userId);
 
+    if (activeStatementId) query = query.eq('statement_id', activeStatementId);
+
+    const { data, error } = await query;
     if (error) throw error;
 
     const totalCredits = data

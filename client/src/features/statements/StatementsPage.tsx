@@ -68,6 +68,20 @@ export function StatementsPage() {
     try {
       await apiClient.delete(`/statements/${id}`);
       dispatch(removeStatement(id));
+      // Refetch to get the backend's promoted default
+      const res = await apiClient.get('/statements');
+      dispatch(setStatements(res.data));
+    } catch {
+      // silent
+    }
+  }
+
+  async function handleSetDefault(id: string) {
+    try {
+      await apiClient.patch(`/statements/${id}/set-default`);
+      // Update local state: mark the chosen one as default
+      const updated = items.map((s) => ({ ...s, is_default: s.id === id }));
+      dispatch(setStatements(updated));
     } catch {
       // silent
     }
@@ -157,7 +171,12 @@ export function StatementsPage() {
         ) : (
           <div className="space-y-2">
             {items.map((stmt) => (
-              <StatementRow key={stmt.id} statement={stmt} onDelete={handleDelete} />
+              <StatementRow
+                key={stmt.id}
+                statement={stmt}
+                onDelete={handleDelete}
+                onSetDefault={handleSetDefault}
+              />
             ))}
           </div>
         )}
@@ -166,9 +185,17 @@ export function StatementsPage() {
   );
 }
 
-function StatementRow({ statement, onDelete }: { statement: BankStatement; onDelete: (id: string) => void }) {
+function StatementRow({
+  statement,
+  onDelete,
+  onSetDefault,
+}: {
+  statement: BankStatement;
+  onDelete: (id: string) => void;
+  onSetDefault: (id: string) => void;
+}) {
   return (
-    <Card>
+    <Card className={cn(statement.is_default && 'ring-2 ring-blue-500 ring-offset-1')}>
       <CardContent className="flex items-center gap-4 p-4">
         <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
           <FileText className="h-4 w-4 text-gray-500" />
@@ -187,6 +214,18 @@ function StatementRow({ statement, onDelete }: { statement: BankStatement; onDel
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
+          {statement.is_default ? (
+            <Badge className="bg-blue-100 text-blue-700 text-xs">Active</Badge>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs text-gray-500 hover:text-blue-600"
+              onClick={(e) => { e.stopPropagation(); onSetDefault(statement.id); }}
+            >
+              Set as active
+            </Button>
+          )}
           <span className="text-xs text-gray-400">{formatDate(statement.uploaded_at)}</span>
           <Button
             variant="ghost"

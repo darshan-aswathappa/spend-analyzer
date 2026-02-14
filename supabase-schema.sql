@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS bank_statements (
   bank_name TEXT,
   statement_period_start DATE,
   statement_period_end DATE,
-  uploaded_at TIMESTAMPTZ DEFAULT NOW()
+  uploaded_at TIMESTAMPTZ DEFAULT NOW(),
+  is_default BOOLEAN NOT NULL DEFAULT false
 );
 
 -- Transactions
@@ -53,6 +54,7 @@ CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date DESC);
 CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_user_id ON chat_messages(user_id);
 CREATE INDEX IF NOT EXISTS idx_bank_statements_user_id ON bank_statements(user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_one_default_per_user ON bank_statements(user_id) WHERE is_default = true;
 
 -- ============================================================
 -- Row Level Security (RLS)

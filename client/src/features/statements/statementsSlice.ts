@@ -3,6 +3,7 @@ import type { BankStatement } from '@/types';
 
 interface StatementsState {
   items: BankStatement[];
+  activeStatementId: string | null;
   loading: boolean;
   uploading: boolean;
   error: string | null;
@@ -10,6 +11,7 @@ interface StatementsState {
 
 const initialState: StatementsState = {
   items: [],
+  activeStatementId: null,
   loading: false,
   uploading: false,
   error: null,
@@ -23,13 +25,25 @@ const statementsSlice = createSlice({
       state.items = action.payload;
       state.loading = false;
       state.error = null;
+      const defaultStmt = action.payload.find((s) => s.is_default);
+      state.activeStatementId = defaultStmt?.id ?? null;
     },
     addStatement(state, action: PayloadAction<BankStatement>) {
       state.items.unshift(action.payload);
       state.uploading = false;
+      if (action.payload.is_default) {
+        state.items.forEach((s) => {
+          if (s.id !== action.payload.id) s.is_default = false;
+        });
+        state.activeStatementId = action.payload.id;
+      }
     },
     removeStatement(state, action: PayloadAction<string>) {
       state.items = state.items.filter((s) => s.id !== action.payload);
+      if (state.activeStatementId === action.payload) {
+        const newDefault = state.items.find((s) => s.is_default);
+        state.activeStatementId = newDefault?.id ?? state.items[0]?.id ?? null;
+      }
     },
     setLoading(state, action: PayloadAction<boolean>) {
       state.loading = action.payload;
