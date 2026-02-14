@@ -199,73 +199,75 @@ function StatementRow({
 
   return (
     <Card className={cn(statement.is_default && 'ring-2 ring-blue-500 ring-offset-1')}>
-      <CardContent className="flex items-center gap-4 p-4">
-        <div className={cn(
-          'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
-          isFailed ? 'bg-red-50' : isProcessing ? 'bg-amber-50' : 'bg-gray-100'
-        )}>
-          {isProcessing ? (
-            <Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
-          ) : isFailed ? (
-            <AlertCircle className="h-4 w-4 text-red-500" />
-          ) : (
-            <FileText className="h-4 w-4 text-gray-500" />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{statement.filename}</p>
-          <div className="flex items-center gap-2 mt-0.5">
-            {isProcessing && (
-              <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-700">
-                <Clock className="h-3 w-3 mr-1" />
-                Processing...
-              </Badge>
-            )}
-            {isFailed && (
-              <Badge variant="secondary" className="text-xs bg-red-50 text-red-700">
-                Failed
-              </Badge>
-            )}
-            {!isProcessing && !isFailed && statement.bank_name && (
-              <Badge variant="secondary" className="text-xs">{statement.bank_name}</Badge>
-            )}
-            {!isProcessing && !isFailed && statement.statement_period_start && statement.statement_period_end && (
-              <span className="text-xs text-gray-400">
-                {formatDate(statement.statement_period_start)} – {formatDate(statement.statement_period_end)}
-              </span>
-            )}
-            {isFailed && statement.processing_error && (
-              <span className="text-xs text-red-500 truncate">{statement.processing_error}</span>
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+          <div className={cn(
+            'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
+            isFailed ? 'bg-red-50' : isProcessing ? 'bg-amber-50' : 'bg-gray-100'
+          )}>
+            {isProcessing ? (
+              <Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
+            ) : isFailed ? (
+              <AlertCircle className="h-4 w-4 text-red-500" />
+            ) : (
+              <FileText className="h-4 w-4 text-gray-500" />
             )}
           </div>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          {!isProcessing && !isFailed && (
-            <>
-              {statement.is_default ? (
-                <Badge className="bg-blue-100 text-blue-700 text-xs">Active</Badge>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs text-gray-500 hover:text-blue-600"
-                  onClick={(e) => { e.stopPropagation(); onSetDefault(statement.id); }}
-                >
-                  Set as active
-                </Button>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">{statement.filename}</p>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-0.5">
+              {isProcessing && (
+                <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-700">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Processing...
+                </Badge>
               )}
-            </>
-          )}
-          <span className="text-xs text-gray-400">{formatDate(statement.uploaded_at)}</span>
+              {isFailed && (
+                <Badge variant="secondary" className="text-xs bg-red-50 text-red-700">
+                  Failed
+                </Badge>
+              )}
+              {!isProcessing && !isFailed && statement.bank_name && (
+                <Badge variant="secondary" className="text-xs">{statement.bank_name}</Badge>
+              )}
+              {!isProcessing && !isFailed && statement.statement_period_start && statement.statement_period_end && (
+                <span className="text-xs text-gray-400">
+                  {formatDate(statement.statement_period_start)} – {formatDate(statement.statement_period_end)}
+                </span>
+              )}
+              {isFailed && statement.processing_error && (
+                <span className="text-xs text-red-500 truncate">{statement.processing_error}</span>
+              )}
+            </div>
+          </div>
+          {/* Delete button always visible */}
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-gray-400 hover:text-red-600"
+            className="h-7 w-7 text-gray-400 hover:text-red-600 shrink-0"
             onClick={() => onDelete(statement.id)}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
         </div>
+        {/* Actions row */}
+        {!isProcessing && !isFailed && (
+          <div className="flex items-center gap-2 mt-2 pl-11">
+            {statement.is_default ? (
+              <Badge className="bg-blue-100 text-blue-700 text-xs">Active</Badge>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-gray-500 hover:text-blue-600"
+                onClick={(e) => { e.stopPropagation(); onSetDefault(statement.id); }}
+              >
+                Set as active
+              </Button>
+            )}
+            <span className="text-xs text-gray-400 ml-auto">{formatDate(statement.uploaded_at)}</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

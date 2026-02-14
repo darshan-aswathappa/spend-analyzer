@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ArrowLeftRight, FileText, MessageSquare, TrendingUp, ShieldCheck, LogOut } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, FileText, MessageSquare, TrendingUp, ShieldCheck, LogOut, X } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { cn } from '@/lib/utils';
 
@@ -12,19 +12,35 @@ const navItems = [
   { to: '/chat', icon: MessageSquare, label: 'Ask AI' },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  open?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ open, onClose }: SidebarProps) {
   async function handleLogout() {
     await supabase.auth.signOut();
   }
 
-  return (
-    <aside className="w-56 flex flex-col h-screen bg-white border-r border-gray-200 shrink-0">
+  const sidebarContent = (
+    <aside className="w-56 flex flex-col h-full bg-white shrink-0">
       {/* Brand */}
-      <div className="flex items-center gap-2.5 px-5 h-16 border-b border-gray-100">
-        <div className="flex items-center justify-center w-7 h-7 bg-blue-600 rounded-lg">
-          <span className="text-white font-bold text-xs">SA</span>
+      <div className="flex items-center justify-between px-5 h-16 border-b border-gray-100">
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center justify-center w-7 h-7 bg-blue-600 rounded-lg">
+            <span className="text-white font-bold text-xs">SA</span>
+          </div>
+          <span className="font-semibold text-gray-900 text-sm">SpendAnalyzer</span>
         </div>
-        <span className="font-semibold text-gray-900 text-sm">SpendAnalyzer</span>
+        {/* Close button — mobile only */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="md:hidden p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       {/* Nav */}
@@ -33,6 +49,7 @@ export function Sidebar() {
           <NavLink
             key={to}
             to={to}
+            onClick={onClose}
             className={({ isActive }) =>
               cn(
                 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
@@ -59,5 +76,34 @@ export function Sidebar() {
         </button>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar — always visible */}
+      <div className="hidden md:flex border-r border-gray-200">
+        {sidebarContent}
+      </div>
+
+      {/* Mobile drawer */}
+      <div
+        className={cn(
+          'fixed inset-0 z-40 md:hidden transition-opacity duration-200',
+          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        )}
+      >
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+        {/* Drawer */}
+        <div
+          className={cn(
+            'absolute inset-y-0 left-0 transition-transform duration-200 ease-out shadow-xl',
+            open ? 'translate-x-0' : '-translate-x-full'
+          )}
+        >
+          {sidebarContent}
+        </div>
+      </div>
+    </>
   );
 }

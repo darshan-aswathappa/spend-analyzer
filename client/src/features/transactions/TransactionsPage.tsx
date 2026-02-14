@@ -57,19 +57,19 @@ export function TransactionsPage() {
     <div className="max-w-5xl mx-auto space-y-4">
       {/* Filters */}
       <Card>
-        <CardContent className="p-4 flex flex-wrap items-center gap-3">
+        <CardContent className="p-3 sm:p-4 flex flex-wrap items-center gap-2 sm:gap-3">
           <Input
             placeholder="Search transactions..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-8 text-sm w-52"
+            className="h-8 text-sm w-full sm:w-52"
           />
 
           <Select
             value={filters.category || 'all'}
             onValueChange={(v) => dispatch(setFilter({ category: v === 'all' ? '' : v }))}
           >
-            <SelectTrigger className="h-8 text-sm w-44">
+            <SelectTrigger className="h-8 text-sm w-[calc(50%-4px)] sm:w-44">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -84,7 +84,7 @@ export function TransactionsPage() {
             value={filters.type || 'all'}
             onValueChange={(v) => dispatch(setFilter({ type: v === 'all' ? '' : v }))}
           >
-            <SelectTrigger className="h-8 text-sm w-36">
+            <SelectTrigger className="h-8 text-sm w-[calc(50%-4px)] sm:w-36">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>
@@ -98,14 +98,14 @@ export function TransactionsPage() {
             type="date"
             value={filters.from}
             onChange={(e) => dispatch(setFilter({ from: e.target.value }))}
-            className="h-8 text-sm w-36"
+            className="h-8 text-sm w-[calc(50%-12px)] sm:w-36"
           />
           <span className="text-xs text-gray-400">to</span>
           <Input
             type="date"
             value={filters.to}
             onChange={(e) => dispatch(setFilter({ to: e.target.value }))}
-            className="h-8 text-sm w-36"
+            className="h-8 text-sm w-[calc(50%-12px)] sm:w-36"
           />
 
           {hasFilters && (
@@ -120,7 +120,7 @@ export function TransactionsPage() {
             </Button>
           )}
 
-          <span className="ml-auto text-xs text-gray-400">
+          <span className="w-full sm:w-auto sm:ml-auto text-xs text-gray-400 text-center sm:text-right">
             {filtered.length} of {total} transactions
           </span>
         </CardContent>

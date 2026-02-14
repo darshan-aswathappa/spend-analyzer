@@ -134,7 +134,7 @@ export function ChatPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-7rem)]">
+    <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-6.5rem)] md:h-[calc(100vh-7rem)]">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>

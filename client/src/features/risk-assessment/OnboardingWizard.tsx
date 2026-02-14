@@ -176,7 +176,7 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
             </div>
             {i < STEPS.length - 1 && (
               <div
-                className={`w-12 h-0.5 mx-1 mt-[-18px] ${
+                className={`w-6 sm:w-12 h-0.5 mx-0.5 sm:mx-1 mt-[-18px] ${
                   i < step ? 'bg-blue-600' : 'bg-gray-200'
                 }`}
               />
@@ -215,7 +215,7 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
             </div>
             <div>
               <Label className="text-sm font-medium text-gray-700">Income Source</Label>
-              <div className="grid grid-cols-2 gap-2 mt-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1.5">
                 {INCOME_SOURCES.map((src) => (
                   <button
                     key={src.value}
@@ -239,14 +239,14 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
         {step === 1 && (
           <div className="space-y-3">
             {obligations.map((ob, i) => (
-              <div key={i} className="flex items-center gap-2">
+              <div key={i} className="flex flex-wrap sm:flex-nowrap items-center gap-2">
                 <Input
                   placeholder="Name (e.g., Rent)"
                   value={ob.name}
                   onChange={(e) => updateObligation(i, 'name', e.target.value)}
-                  className="flex-1"
+                  className="flex-1 min-w-0"
                 />
-                <div className="relative w-28">
+                <div className="relative w-24 sm:w-28">
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
                     $
                   </span>
@@ -263,7 +263,7 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
                   value={ob.category}
                   onValueChange={(v) => updateObligation(i, 'category', v)}
                 >
-                  <SelectTrigger className="w-40">
+                  <SelectTrigger className="w-full sm:w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -279,7 +279,7 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
                 <button
                   type="button"
                   onClick={() => removeObligation(i)}
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                  className="p-2 text-gray-400 hover:text-red-500 transition-colors shrink-0"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -353,7 +353,7 @@ export function OnboardingWizard({ existingData, onComplete }: OnboardingWizardP
               Select which spending categories you consider <strong>essential needs</strong>.
               Everything else will be treated as discretionary wants.
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {ALL_CATEGORIES.filter((c) => c !== 'Income' && c !== 'Transfers').map((cat) => (
                 <button
                   key={cat}
