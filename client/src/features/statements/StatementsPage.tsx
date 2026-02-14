@@ -6,7 +6,7 @@ import { setStatements, addStatement, removeStatement, setUploading, setError } 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Upload, FileText, Trash2, Loader2, CheckCircle } from 'lucide-react';
+import { Upload, FileText, Trash2, Loader2, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { formatDate, cn } from '@/lib/utils';
 import type { BankStatement } from '@/types';
 
@@ -48,13 +48,13 @@ export function StatementsPage() {
     try {
       const res = await apiClient.post('/statements/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 120_000, // 2 min — GPT-4o can be slow
       });
       dispatch(addStatement(res.data.statement));
-      const count = res.data.transactionCount ?? 0;
-      setUploadSuccess(`Parsed ${count} transaction${count !== 1 ? 's' : ''} from ${file.name}`);
+      const mins = res.data.estimatedMinutes ?? 1;
+      setUploadSuccess(
+        `${file.name} queued for processing. Should be ready in ~${mins} minute${mins !== 1 ? 's' : ''}. You can upload more files.`
+      );
     } catch (err: unknown) {
-      // Extract server error message from Axios response body if available
       const axiosErr = err as { response?: { data?: { error?: string } }; message?: string };
       const msg =
         axiosErr?.response?.data?.error ||
@@ -194,37 +194,67 @@ function StatementRow({
   onDelete: (id: string) => void;
   onSetDefault: (id: string) => void;
 }) {
+  const isProcessing = statement.processing_status === 'pending' || statement.processing_status === 'processing';
+  const isFailed = statement.processing_status === 'failed';
+
   return (
     <Card className={cn(statement.is_default && 'ring-2 ring-blue-500 ring-offset-1')}>
       <CardContent className="flex items-center gap-4 p-4">
-        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center shrink-0">
-          <FileText className="h-4 w-4 text-gray-500" />
+        <div className={cn(
+          'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
+          isFailed ? 'bg-red-50' : isProcessing ? 'bg-amber-50' : 'bg-gray-100'
+        )}>
+          {isProcessing ? (
+            <Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
+          ) : isFailed ? (
+            <AlertCircle className="h-4 w-4 text-red-500" />
+          ) : (
+            <FileText className="h-4 w-4 text-gray-500" />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900 truncate">{statement.filename}</p>
           <div className="flex items-center gap-2 mt-0.5">
-            {statement.bank_name && (
+            {isProcessing && (
+              <Badge variant="secondary" className="text-xs bg-amber-50 text-amber-700">
+                <Clock className="h-3 w-3 mr-1" />
+                Processing...
+              </Badge>
+            )}
+            {isFailed && (
+              <Badge variant="secondary" className="text-xs bg-red-50 text-red-700">
+                Failed
+              </Badge>
+            )}
+            {!isProcessing && !isFailed && statement.bank_name && (
               <Badge variant="secondary" className="text-xs">{statement.bank_name}</Badge>
             )}
-            {statement.statement_period_start && statement.statement_period_end && (
+            {!isProcessing && !isFailed && statement.statement_period_start && statement.statement_period_end && (
               <span className="text-xs text-gray-400">
                 {formatDate(statement.statement_period_start)} – {formatDate(statement.statement_period_end)}
               </span>
             )}
+            {isFailed && statement.processing_error && (
+              <span className="text-xs text-red-500 truncate">{statement.processing_error}</span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          {statement.is_default ? (
-            <Badge className="bg-blue-100 text-blue-700 text-xs">Active</Badge>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs text-gray-500 hover:text-blue-600"
-              onClick={(e) => { e.stopPropagation(); onSetDefault(statement.id); }}
-            >
-              Set as active
-            </Button>
+          {!isProcessing && !isFailed && (
+            <>
+              {statement.is_default ? (
+                <Badge className="bg-blue-100 text-blue-700 text-xs">Active</Badge>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-gray-500 hover:text-blue-600"
+                  onClick={(e) => { e.stopPropagation(); onSetDefault(statement.id); }}
+                >
+                  Set as active
+                </Button>
+              )}
+            </>
           )}
           <span className="text-xs text-gray-400">{formatDate(statement.uploaded_at)}</span>
           <Button

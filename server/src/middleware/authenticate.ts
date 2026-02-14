@@ -8,12 +8,19 @@ export async function authenticate(
   next: NextFunction
 ): Promise<void> {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  const queryToken = req.query.token as string | undefined;
+
+  let token: string | undefined;
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (queryToken) {
+    token = queryToken;
+  }
+
+  if (!token) {
     res.status(401).json({ error: 'Missing authorization token' });
     return;
   }
-
-  const token = authHeader.split(' ')[1];
   const { data, error } = await supabase.auth.getUser(token);
 
   if (error || !data.user) {

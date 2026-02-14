@@ -56,9 +56,29 @@ const statementsSlice = createSlice({
       state.loading = false;
       state.uploading = false;
     },
+    updateStatementStatus(
+      state,
+      action: PayloadAction<{
+        id: string;
+        status: 'completed' | 'failed';
+        error?: string;
+        bankName?: string;
+        periodStart?: string;
+        periodEnd?: string;
+      }>
+    ) {
+      const stmt = state.items.find((s) => s.id === action.payload.id);
+      if (stmt) {
+        stmt.processing_status = action.payload.status;
+        if (action.payload.error) stmt.processing_error = action.payload.error;
+        if (action.payload.bankName) stmt.bank_name = action.payload.bankName;
+        if (action.payload.periodStart) stmt.statement_period_start = action.payload.periodStart;
+        if (action.payload.periodEnd) stmt.statement_period_end = action.payload.periodEnd;
+      }
+    },
   },
 });
 
-export const { setStatements, addStatement, removeStatement, setLoading, setUploading, setError } =
+export const { setStatements, addStatement, removeStatement, setLoading, setUploading, setError, updateStatementStatus } =
   statementsSlice.actions;
 export default statementsSlice.reducer;

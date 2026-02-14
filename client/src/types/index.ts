@@ -19,6 +19,8 @@ export interface BankStatement {
   statement_period_end: string | null;
   uploaded_at: string;
   is_default: boolean;
+  processing_status: 'pending' | 'processing' | 'completed' | 'failed';
+  processing_error: string | null;
 }
 
 export interface TransactionSummary {

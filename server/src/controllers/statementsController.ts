@@ -1,10 +1,8 @@
 import { Response, NextFunction } from 'express';
 import fs from 'fs';
 import { AuthenticatedRequest } from '../types';
-import { extractTextFromPdf } from '../services/pdfParser';
-import { parseTransactionsFromText, parseTransactionsFromImages } from '../services/aiParser';
-import { pdfToBase64Images } from '../services/pdfToImages';
 import { supabase } from '../config/supabase';
+import { getRabbitChannel, getQueueName } from '../config/rabbitmq';
 
 export async function uploadStatement(
   req: AuthenticatedRequest,
@@ -18,25 +16,6 @@ export async function uploadStatement(
   }
 
   try {
-    const rawText = await extractTextFromPdf(file.path);
-    const isScanned = !rawText || rawText.trim().length < 50;
-
-    let transactions, bankName, periodStart, periodEnd;
-
-    if (isScanned) {
-      // Scanned (image-based) PDF — render pages and use GPT-4o vision
-      console.log('[INFO] Scanned PDF detected, switching to vision-based parsing');
-      const images = await pdfToBase64Images(file.path);
-      if (images.length === 0) {
-        res.status(422).json({ error: 'Could not render this PDF. Please try a different file.' });
-        return;
-      }
-      ({ transactions, bankName, periodStart, periodEnd } = await parseTransactionsFromImages(images));
-    } else {
-      // Text-based PDF — fast text extraction path
-      ({ transactions, bankName, periodStart, periodEnd } = await parseTransactionsFromText(rawText));
-    }
-
     // Check if user has any existing statements (to auto-set default)
     const { count } = await supabase
       .from('bank_statements')
@@ -45,15 +24,14 @@ export async function uploadStatement(
 
     const shouldBeDefault = count === 0;
 
-    // Insert statement record
+    // Insert statement with pending status
     const { data: statement, error: stmtError } = await supabase
       .from('bank_statements')
       .insert({
         user_id: req.userId,
         filename: file.originalname,
-        bank_name: bankName,
-        statement_period_start: periodStart,
-        statement_period_end: periodEnd,
+        processing_status: 'pending',
+        file_path: file.path,
         is_default: shouldBeDefault,
       })
       .select()
@@ -61,32 +39,30 @@ export async function uploadStatement(
 
     if (stmtError) throw stmtError;
 
-    if (transactions.length > 0) {
-      const rows = transactions.map((t) => ({
-        user_id: req.userId,
-        statement_id: statement.id,
-        date: t.date,
-        description: t.description,
-        amount: t.amount,
-        type: t.type,
-        category: t.category,
-      }));
-
-      const { error: txError } = await supabase.from('transactions').insert(rows);
-      if (txError) throw txError;
-    }
+    // Publish to RabbitMQ
+    const channel = await getRabbitChannel();
+    channel.sendToQueue(
+      getQueueName(),
+      Buffer.from(JSON.stringify({
+        statementId: statement.id,
+        userId: req.userId,
+        filePath: file.path,
+        filename: file.originalname,
+      })),
+      { persistent: true }
+    );
 
     res.json({
       statement,
-      transactionCount: transactions.length,
+      status: 'queued',
+      estimatedMinutes: 1,
     });
   } catch (err) {
-    next(err);
-  } finally {
-    // Clean up temp file
-    if (fs.existsSync(file.path)) {
+    // If queueing fails, clean up the file
+    if (file && fs.existsSync(file.path)) {
       fs.unlinkSync(file.path);
     }
+    next(err);
   }
 }
 

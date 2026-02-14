@@ -21,7 +21,11 @@ CREATE TABLE IF NOT EXISTS bank_statements (
   statement_period_start DATE,
   statement_period_end DATE,
   uploaded_at TIMESTAMPTZ DEFAULT NOW(),
-  is_default BOOLEAN NOT NULL DEFAULT false
+  is_default BOOLEAN NOT NULL DEFAULT false,
+  processing_status TEXT NOT NULL DEFAULT 'completed'
+    CHECK (processing_status IN ('pending', 'processing', 'completed', 'failed')),
+  processing_error TEXT,
+  file_path TEXT
 );
 
 -- Transactions
@@ -46,6 +50,16 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Notifications (for async processing updates)
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  payload JSONB NOT NULL DEFAULT '{}',
+  read BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ============================================================
 -- Indexes for performance
 -- ============================================================
@@ -55,6 +69,7 @@ CREATE INDEX IF NOT EXISTS idx_transactions_category ON transactions(category);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_user_id ON chat_messages(user_id);
 CREATE INDEX IF NOT EXISTS idx_bank_statements_user_id ON bank_statements(user_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_one_default_per_user ON bank_statements(user_id) WHERE is_default = true;
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
 
 -- ============================================================
 -- Row Level Security (RLS)
@@ -63,6 +78,7 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bank_statements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: users can only see/edit their own
 CREATE POLICY "profiles: own data" ON profiles
@@ -78,6 +94,10 @@ CREATE POLICY "transactions: own data" ON transactions
 
 -- Chat messages: own data only
 CREATE POLICY "chat_messages: own data" ON chat_messages
+  FOR ALL USING (auth.uid() = user_id);
+
+-- Notifications: own data only
+CREATE POLICY "notifications: own data" ON notifications
   FOR ALL USING (auth.uid() = user_id);
 
 -- Service role bypasses RLS (for backend inserts)

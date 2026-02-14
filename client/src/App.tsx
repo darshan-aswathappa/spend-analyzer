@@ -6,6 +6,8 @@ import { AppRoutes } from './routes/AppRoutes';
 import { supabase } from './lib/supabaseClient';
 import { setSession } from './features/auth/authSlice';
 import type { AppDispatch } from './app/store';
+import { Toaster } from './components/ui/toaster';
+import { useNotifications } from './hooks/useNotifications';
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch<AppDispatch>();
@@ -25,13 +27,21 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function NotificationListener() {
+  useNotifications();
+  return null;
+}
+
 export default function App() {
   return (
     <Provider store={store}>
       <BrowserRouter>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
+        <Toaster>
+          <AuthProvider>
+            <NotificationListener />
+            <AppRoutes />
+          </AuthProvider>
+        </Toaster>
       </BrowserRouter>
     </Provider>
   );
