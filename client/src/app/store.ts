@@ -5,6 +5,7 @@ import statementsReducer from '@/features/statements/statementsSlice';
 import chatReducer from '@/features/chat/chatSlice';
 import analyticsReducer from '@/features/analytics/analyticsSlice';
 import riskAssessmentReducer from '@/features/risk-assessment/riskAssessmentSlice';
+import wealthManagementReducer from '@/features/wealth-management/wealthManagementSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     chat: chatReducer,
     analytics: analyticsReducer,
     riskAssessment: riskAssessmentReducer,
+    wealthManagement: wealthManagementReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

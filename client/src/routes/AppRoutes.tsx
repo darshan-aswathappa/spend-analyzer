@@ -9,6 +9,7 @@ import { StatementsPage } from '@/features/statements/StatementsPage';
 import { ChatPage } from '@/features/chat/ChatPage';
 import { AnalyticsPage } from '@/features/analytics/AnalyticsPage';
 import { RiskAssessmentPage } from '@/features/risk-assessment/RiskAssessmentPage';
+import { WealthManagementPage } from '@/features/wealth-management/WealthManagementPage';
 
 export function AppRoutes() {
   return (
@@ -30,6 +31,7 @@ export function AppRoutes() {
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/risk-assessment" element={<RiskAssessmentPage />} />
         <Route path="/chat" element={<ChatPage />} />
+        <Route path="/wealth-management" element={<WealthManagementPage />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
