@@ -170,9 +170,18 @@ export function useWealthTree() {
     prevFlowDataRef.current = flowData;
 
     if (isStructureChange) {
-      // Structure changed: replace all nodes with new positions
+      // Structure changed: preserve existing node positions, only use computed positions for new nodes
       structureChangedRef.current = true;
-      setNodes(flowData.nodes);
+      setNodes((currentNodes) => {
+        const currentPositions = new Map(currentNodes.map((n) => [n.id, n.position]));
+        return flowData.nodes.map((node) => {
+          const existingPos = currentPositions.get(node.id);
+          if (existingPos) {
+            return { ...node, position: existingPos };
+          }
+          return node;
+        });
+      });
       setEdges(flowData.edges);
     } else {
       // Only data changed: update data in-place, preserve user-dragged positions
