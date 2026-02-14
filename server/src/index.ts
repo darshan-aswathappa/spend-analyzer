@@ -1,18 +1,19 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import path from 'path';
-import fs from 'fs';
-import { env, validateEnv } from './config/env';
-import { errorHandler } from './middleware/errorHandler';
-import apiRouter from './routes';
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import path from "path";
+import fs from "fs";
+import { env, validateEnv } from "./config/env";
+import { errorHandler } from "./middleware/errorHandler";
+import apiRouter from "./routes";
+import "./worker";
 
 validateEnv();
 
 const app = express();
 
 // Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../uploads');
+const uploadsDir = path.join(__dirname, "../uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -20,17 +21,17 @@ if (!fs.existsSync(uploadsDir)) {
 app.use(helmet());
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
-  })
+  }),
 );
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: "10mb" }));
 
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.use('/api', apiRouter);
+app.use("/api", apiRouter);
 app.use(errorHandler);
 
 app.listen(parseInt(env.PORT), () => {
