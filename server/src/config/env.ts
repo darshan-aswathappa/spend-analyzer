@@ -8,7 +8,6 @@ export const env = {
   SUPABASE_URL: process.env.SUPABASE_URL || '',
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
-  NODE_ENV: process.env.NODE_ENV || 'development',
   RABBITMQ_URL: process.env.RABBITMQ_URL || 'amqp://localhost:5672',
 };
 

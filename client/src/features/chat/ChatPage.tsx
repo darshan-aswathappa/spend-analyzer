@@ -73,7 +73,8 @@ export function ChatPage() {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
 
-      const response = await fetch('/api/chat', {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || '/api';
+      const response = await fetch(`${apiBase}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
