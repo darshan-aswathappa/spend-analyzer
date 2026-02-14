@@ -51,9 +51,13 @@ export function AnalyticsPage() {
       }
     }
 
-    fetchTrends();
-    fetchProjections();
-  }, [dispatch]);
+    if (!trends) {
+      fetchTrends();
+    }
+    if (!projections) {
+      fetchProjections();
+    }
+  }, [dispatch, trends, projections]);
 
   if (loading) {
     return (

@@ -46,6 +46,10 @@ const analyticsSlice = createSlice({
     setError(state, action: PayloadAction<string | null>) {
       state.error = action.payload;
     },
+    invalidateAnalytics(state) {
+      state.trends = null;
+      state.projections = null;
+    },
   },
 });
 
@@ -57,6 +61,7 @@ export const {
   setProjectionsLoading,
   setReportLoading,
   setError,
+  invalidateAnalytics,
 } = analyticsSlice.actions;
 
 export default analyticsSlice.reducer;

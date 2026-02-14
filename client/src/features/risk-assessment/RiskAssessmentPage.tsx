@@ -46,12 +46,14 @@ export function RiskAssessmentPage() {
       }
     }
 
-    checkOnboarding();
-  }, [dispatch]);
+    if (!onboardingChecked) {
+      checkOnboarding();
+    }
+  }, [dispatch, onboardingChecked]);
 
   // Fetch score and history when onboarding is complete
   useEffect(() => {
-    if (!onboarding || editMode) return;
+    if (!onboarding || editMode || score) return;
 
     async function fetchScore() {
       dispatch(setScoreLoading(true));
@@ -82,7 +84,7 @@ export function RiskAssessmentPage() {
 
     fetchScore();
     fetchHistory();
-  }, [onboarding, editMode, dispatch]);
+  }, [onboarding, editMode, score, dispatch]);
 
   async function handleRecalculate() {
     dispatch(setScoreLoading(true));

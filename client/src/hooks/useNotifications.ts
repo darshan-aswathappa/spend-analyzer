@@ -4,6 +4,7 @@ import type { RootState, AppDispatch } from '@/app/store';
 import { useToast } from '@/components/ui/toaster';
 import { updateStatementStatus } from '@/features/statements/statementsSlice';
 import { setScore } from '@/features/risk-assessment/riskAssessmentSlice';
+import { invalidateAnalytics } from '@/features/analytics/analyticsSlice';
 
 export function useNotifications() {
   const session = useSelector((state: RootState) => state.auth.session);
@@ -30,6 +31,7 @@ export function useNotifications() {
             status: 'completed',
           })
         );
+        dispatch(invalidateAnalytics());
         toast({
           title: 'Statement processed',
           description: `${data.payload.transactionCount} transactions extracted from ${data.payload.filename}. Ready to view.`,
