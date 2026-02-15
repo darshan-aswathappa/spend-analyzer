@@ -6,6 +6,7 @@ import chatReducer from '@/features/chat/chatSlice';
 import analyticsReducer from '@/features/analytics/analyticsSlice';
 import riskAssessmentReducer from '@/features/risk-assessment/riskAssessmentSlice';
 import wealthManagementReducer from '@/features/wealth-management/wealthManagementSlice';
+import { wealthAutoSaveMiddleware } from '@/features/wealth-management/wealthAutoSaveMiddleware';
 
 export const store = configureStore({
   reducer: {
@@ -23,7 +24,7 @@ export const store = configureStore({
         ignoredActions: ['auth/setSession'],
         ignoredPaths: ['auth.session'],
       },
-    }),
+    }).concat(wealthAutoSaveMiddleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

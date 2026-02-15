@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, ArrowRight, GitBranch } from 'lucide-react';
+import { Plus, Trash2, ArrowRight, GitBranch, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,23 +13,45 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { RootState, AppDispatch } from '@/app/store';
-import { createFlow, deleteFlow } from './wealthManagementSlice';
+import { fetchWealthData, createFlowAsync, deleteFlowAsync } from './wealthManagementSlice';
 
 export function WealthFlowListPage() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { loaded, loading } = useSelector((state: RootState) => state.wealthManagement);
   const flows = useSelector((state: RootState) =>
     Object.values(state.wealthManagement.flows).sort((a, b) => b.createdAt - a.createdAt)
   );
 
   const [showCreate, setShowCreate] = useState(false);
   const [newFlowName, setNewFlowName] = useState('');
+  const [creating, setCreating] = useState(false);
 
-  function handleCreate() {
-    if (!newFlowName.trim()) return;
-    dispatch(createFlow({ name: newFlowName.trim() }));
-    setNewFlowName('');
-    setShowCreate(false);
+  useEffect(() => {
+    if (!loaded && !loading) {
+      dispatch(fetchWealthData());
+    }
+  }, [dispatch, loaded, loading]);
+
+  async function handleCreate() {
+    if (!newFlowName.trim() || creating) return;
+    setCreating(true);
+    try {
+      const result = await dispatch(createFlowAsync({ name: newFlowName.trim() })).unwrap();
+      setNewFlowName('');
+      setShowCreate(false);
+      navigate(`/wealth-management/${result.id}`);
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      </div>
+    );
   }
 
   return (
@@ -83,7 +105,7 @@ export function WealthFlowListPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        dispatch(deleteFlow({ flowId: flow.id }));
+                        dispatch(deleteFlowAsync({ flowId: flow.id }));
                       }}
                       className="p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-colors"
                       title="Delete flow"
@@ -119,8 +141,9 @@ export function WealthFlowListPage() {
             <Button
               className="w-full"
               onClick={handleCreate}
-              disabled={!newFlowName.trim()}
+              disabled={!newFlowName.trim() || creating}
             >
+              {creating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Create Flow
             </Button>
           </div>

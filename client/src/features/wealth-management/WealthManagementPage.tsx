@@ -9,7 +9,7 @@ import {
   ReactFlowProvider,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Monitor, ChevronLeft } from 'lucide-react';
+import { Monitor, ChevronLeft, Cloud, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useWealthTree } from './useWealthTree';
@@ -17,6 +17,26 @@ import { WealthNode } from './WealthNode';
 import { MoneyEdge } from './MoneyEdge';
 import { WealthToolbar } from './WealthToolbar';
 import type { RootState } from '@/app/store';
+
+function SaveIndicator() {
+  const saving = useSelector((state: RootState) => state.wealthManagement.saving);
+
+  return (
+    <div className="flex items-center gap-1.5 text-xs text-gray-400">
+      {saving ? (
+        <>
+          <Loader2 className="w-3 h-3 animate-spin" />
+          <span>Saving...</span>
+        </>
+      ) : (
+        <>
+          <Cloud className="w-3 h-3" />
+          <span>Saved</span>
+        </>
+      )}
+    </div>
+  );
+}
 
 function WealthManagementCanvas({ flowId }: { flowId: string }) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, reset, addSource } =
@@ -54,9 +74,19 @@ function WealthManagementCanvas({ flowId }: { flowId: string }) {
 export function WealthManagementPage() {
   const { flowId } = useParams<{ flowId: string }>();
   const navigate = useNavigate();
+  const { loaded, loading } = useSelector((state: RootState) => state.wealthManagement);
   const flow = useSelector((state: RootState) =>
     flowId ? state.wealthManagement.flows[flowId] : undefined
   );
+
+  // Still loading data from server — wait before deciding
+  if (loading || !loaded) {
+    return (
+      <div className="h-[calc(100vh-8rem)] flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      </div>
+    );
+  }
 
   if (!flowId || !flow) {
     navigate('/wealth-management', { replace: true });
@@ -81,8 +111,8 @@ export function WealthManagementPage() {
 
       {/* Desktop content */}
       <div className="hidden md:flex flex-1 relative">
-        {/* Back navigation */}
-        <div className="absolute top-4 left-4 z-10">
+        {/* Back navigation + save indicator */}
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-3">
           <Button
             variant="outline"
             size="sm"
@@ -92,6 +122,7 @@ export function WealthManagementPage() {
             <ChevronLeft className="w-4 h-4" />
             {flow.name}
           </Button>
+          <SaveIndicator />
         </div>
 
         <ReactFlowProvider>

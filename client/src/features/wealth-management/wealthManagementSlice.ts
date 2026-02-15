@@ -1,7 +1,8 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { WealthTreeState, WealthFlow, WealthAsset, AssetNodeLink, SplitMode } from './types';
+import { wealthApi, type WealthFlowRow } from './wealthApi';
 
-function createInitialTree(): WealthTreeState {
+export function createInitialTree(): WealthTreeState {
   return {
     nodes: {
       'node-1': {
@@ -98,7 +99,6 @@ function getDescendantIds(state: WealthTreeState, nodeId: string): string[] {
 // Check if adding an edge would create a cycle
 function wouldCreateCycle(state: WealthTreeState, sourceId: string, targetId: string): boolean {
   if (sourceId === targetId) return true;
-  // Check if targetId can reach sourceId (if so, adding sourceId->targetId creates a cycle)
   const visited = new Set<string>();
   const queue = [targetId];
   while (queue.length > 0) {
@@ -126,53 +126,80 @@ function cleanupLinksForNodes(
   }
 }
 
+// --- Async Thunks ---
+
+export const fetchWealthData = createAsyncThunk(
+  'wealthManagement/fetchAll',
+  async () => {
+    const [flows, settings] = await Promise.all([
+      wealthApi.getFlows(),
+      wealthApi.getSettings(),
+    ]);
+    return { flows, settings };
+  }
+);
+
+export const createFlowAsync = createAsyncThunk(
+  'wealthManagement/createFlowAsync',
+  async ({ name }: { name: string }) => {
+    const tree = createInitialTree();
+    const row = await wealthApi.createFlow(name, tree);
+    return row;
+  }
+);
+
+export const deleteFlowAsync = createAsyncThunk(
+  'wealthManagement/deleteFlowAsync',
+  async ({ flowId }: { flowId: string }) => {
+    await wealthApi.deleteFlow(flowId);
+    return flowId;
+  }
+);
+
+// --- State ---
+
 interface WealthManagementState {
   flows: Record<string, WealthFlow>;
   assets: Record<string, WealthAsset>;
   assetNodeLinks: Record<string, AssetNodeLink>;
   nextFlowNum: number;
   nextAssetNum: number;
+  loaded: boolean;
+  loading: boolean;
+  saving: boolean;
+}
+
+// Helper to convert server row to client WealthFlow
+function rowToFlow(row: WealthFlowRow): WealthFlow {
+  return {
+    id: row.id,
+    name: row.name,
+    createdAt: new Date(row.created_at).getTime(),
+    tree: row.tree_data || createInitialTree(),
+  };
 }
 
 const initialState: WealthManagementState = {
-  flows: {
-    'flow-1': {
-      id: 'flow-1',
-      name: 'Estate Plan',
-      createdAt: Date.now(),
-      tree: createInitialTree(),
-    },
-  },
+  flows: {},
   assets: {},
   assetNodeLinks: {},
-  nextFlowNum: 2,
+  nextFlowNum: 1,
   nextAssetNum: 1,
+  loaded: false,
+  loading: false,
+  saving: false,
 };
 
 const wealthManagementSlice = createSlice({
   name: 'wealthManagement',
   initialState,
   reducers: {
+    // Used by auto-save middleware to track saving status
+    setSaving(state, action: PayloadAction<boolean>) {
+      state.saving = action.payload;
+    },
+
     // --- Flow management ---
-    createFlow(state, action: PayloadAction<{ name: string }>) {
-      const id = `flow-${state.nextFlowNum}`;
-      state.nextFlowNum += 1;
-      state.flows[id] = {
-        id,
-        name: action.payload.name,
-        createdAt: Date.now(),
-        tree: createInitialTree(),
-      };
-    },
-
-    deleteFlow(state, action: PayloadAction<{ flowId: string }>) {
-      const flow = state.flows[action.payload.flowId];
-      if (!flow) return;
-      const nodeIds = new Set(Object.keys(flow.tree.nodes));
-      cleanupLinksForNodes(state.assetNodeLinks, nodeIds);
-      delete state.flows[action.payload.flowId];
-    },
-
     renameFlow(state, action: PayloadAction<{ flowId: string; name: string }>) {
       const flow = state.flows[action.payload.flowId];
       if (flow) flow.name = action.payload.name;
@@ -314,11 +341,11 @@ const wealthManagementSlice = createSlice({
         target.isSource = false;
       }
 
-      const parent = flow.tree.nodes[sourceId];
+      const parentNode = flow.tree.nodes[sourceId];
       const siblingEdges = Object.values(flow.tree.edges).filter((e) => e.sourceId === sourceId);
       const count = siblingEdges.length;
       const evenPercent = Math.round((100 / count) * 100) / 100;
-      const evenAmount = parent ? Math.round((parent.amount / count) * 100) / 100 : 0;
+      const evenAmount = parentNode ? Math.round((parentNode.amount / count) * 100) / 100 : 0;
 
       for (const edge of siblingEdges) {
         edge.percentage = evenPercent;
@@ -368,9 +395,9 @@ const wealthManagementSlice = createSlice({
         const count = remainingEdges.length;
 
         if (count > 0) {
-          const parent = flow.tree.nodes[parentId];
+          const parentNode = flow.tree.nodes[parentId];
           const evenPercent = Math.round((100 / count) * 100) / 100;
-          const evenAmount = parent ? Math.round((parent.amount / count) * 100) / 100 : 0;
+          const evenAmount = parentNode ? Math.round((parentNode.amount / count) * 100) / 100 : 0;
 
           for (const edge of remainingEdges) {
             edge.percentage = evenPercent;
@@ -467,11 +494,58 @@ const wealthManagementSlice = createSlice({
       flow.tree = createInitialTree();
     },
   },
+  extraReducers: (builder) => {
+    // Fetch all wealth data
+    builder.addCase(fetchWealthData.pending, (state) => {
+      state.loading = true;
+    });
+    builder.addCase(fetchWealthData.fulfilled, (state, action) => {
+      const { flows, settings } = action.payload;
+
+      // Convert server rows to client flows
+      state.flows = {};
+      for (const row of flows) {
+        const flow = rowToFlow(row);
+        state.flows[flow.id] = flow;
+      }
+
+      // Populate settings
+      if (settings) {
+        state.assets = settings.assets || {};
+        state.assetNodeLinks = settings.asset_node_links || {};
+        state.nextFlowNum = settings.next_flow_num || 1;
+        state.nextAssetNum = settings.next_asset_num || 1;
+      }
+
+      state.loading = false;
+      state.loaded = true;
+    });
+    builder.addCase(fetchWealthData.rejected, (state) => {
+      state.loading = false;
+      state.loaded = true;
+    });
+
+    // Create flow
+    builder.addCase(createFlowAsync.fulfilled, (state, action) => {
+      const flow = rowToFlow(action.payload);
+      state.flows[flow.id] = flow;
+    });
+
+    // Delete flow
+    builder.addCase(deleteFlowAsync.fulfilled, (state, action) => {
+      const flowId = action.payload;
+      const flow = state.flows[flowId];
+      if (flow) {
+        const nodeIds = new Set(Object.keys(flow.tree.nodes));
+        cleanupLinksForNodes(state.assetNodeLinks, nodeIds);
+        delete state.flows[flowId];
+      }
+    });
+  },
 });
 
 export const {
-  createFlow,
-  deleteFlow,
+  setSaving,
   renameFlow,
   createAsset,
   deleteAsset,

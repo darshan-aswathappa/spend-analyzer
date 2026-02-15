@@ -141,6 +141,38 @@ CREATE POLICY "risk_onboarding: own data" ON risk_onboarding
 CREATE POLICY "risk_scores: own data" ON risk_scores
   FOR ALL USING (auth.uid() = user_id);
 
+-- Wealth management flows (one per flow, per user)
+CREATE TABLE IF NOT EXISTS wealth_flows (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  tree_data JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_wealth_flows_user_id ON wealth_flows(user_id);
+
+ALTER TABLE wealth_flows ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "wealth_flows: own data" ON wealth_flows
+  FOR ALL USING (auth.uid() = user_id);
+
+-- Wealth user settings (global assets, links, counters — one row per user)
+CREATE TABLE IF NOT EXISTS wealth_user_settings (
+  user_id UUID PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  assets JSONB NOT NULL DEFAULT '{}',
+  asset_node_links JSONB NOT NULL DEFAULT '{}',
+  next_flow_num INTEGER NOT NULL DEFAULT 1,
+  next_asset_num INTEGER NOT NULL DEFAULT 1,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE wealth_user_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "wealth_user_settings: own data" ON wealth_user_settings
+  FOR ALL USING (auth.uid() = user_id);
+
 -- Service role bypasses RLS (for backend inserts)
 -- This is handled automatically by using the service role key.
 
