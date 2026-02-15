@@ -6,6 +6,12 @@ import { setStatements, addStatement, removeStatement, setUploading, setError } 
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Upload, FileText, Trash2, Loader2, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import { formatDate, cn } from '@/lib/utils';
 import type { BankStatement } from '@/types';
@@ -15,6 +21,7 @@ export function StatementsPage() {
   const { items, loading, uploading, error } = useSelector((state: RootState) => state.statements);
   const [dragOver, setDragOver] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -174,13 +181,29 @@ export function StatementsPage() {
               <StatementRow
                 key={stmt.id}
                 statement={stmt}
-                onDelete={handleDelete}
+                onDelete={setConfirmDeleteId}
                 onSetDefault={handleSetDefault}
               />
             ))}
           </div>
         )}
       </div>
+
+      <Dialog open={!!confirmDeleteId} onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}>
+        <DialogContent>
+          <DialogTitle>Delete statement?</DialogTitle>
+          <DialogDescription>This will permanently remove the statement and cannot be undone.</DialogDescription>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="ghost" onClick={() => setConfirmDeleteId(null)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={() => { handleDelete(confirmDeleteId!); setConfirmDeleteId(null); }}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

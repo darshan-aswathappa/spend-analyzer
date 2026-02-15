@@ -12,6 +12,7 @@ import {
   setHistoryLoading,
   setError,
 } from './riskAssessmentSlice';
+import { setStatements } from '@/features/statements/statementsSlice';
 import { OnboardingWizard } from './OnboardingWizard';
 import { RiskDashboard } from './RiskDashboard';
 import {
@@ -20,13 +21,34 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Link } from 'react-router-dom';
 import type { RiskOnboarding, RiskScore } from '@/types';
 
 export function RiskAssessmentPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { onboarding, onboardingChecked, score, history, loading, scoreLoading, error } =
     useSelector((state: RootState) => state.riskAssessment);
+  const { items: statements, loading: statementsLoading } = useSelector(
+    (state: RootState) => state.statements
+  );
   const [editMode, setEditMode] = useState(false);
+  const [statementsFetched, setStatementsFetched] = useState(false);
+
+  // Fetch statements if not already loaded
+  useEffect(() => {
+    if (statementsFetched) return;
+    async function loadStatements() {
+      try {
+        const res = await apiClient.get('/statements');
+        dispatch(setStatements(res.data));
+      } catch {
+        // silent
+      } finally {
+        setStatementsFetched(true);
+      }
+    }
+    loadStatements();
+  }, [dispatch, statementsFetched]);
 
   // Check onboarding status on mount
   useEffect(() => {
@@ -144,6 +166,26 @@ export function RiskAssessmentPage() {
           existingData={null}
           onComplete={() => setEditMode(false)}
         />
+      </div>
+    );
+  }
+
+  // Show empty state if no statements uploaded
+  if (!statementsLoading && statementsFetched && statements.length === 0) {
+    return (
+      <div className="p-6">
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Risk Assessment</h1>
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-10 text-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            Upload a bank statement to calculate your risk score.
+          </p>
+          <Link
+            to="/statements"
+            className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Go to Statements
+          </Link>
+        </div>
       </div>
     );
   }
