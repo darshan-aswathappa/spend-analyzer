@@ -6,6 +6,7 @@ import chatReducer from '@/features/chat/chatSlice';
 import analyticsReducer from '@/features/analytics/analyticsSlice';
 import riskAssessmentReducer from '@/features/risk-assessment/riskAssessmentSlice';
 import wealthManagementReducer from '@/features/wealth-management/wealthManagementSlice';
+import profileReducer from '@/features/settings/profileSlice';
 import { wealthAutoSaveMiddleware } from '@/features/wealth-management/wealthAutoSaveMiddleware';
 
 export const store = configureStore({
@@ -17,6 +18,7 @@ export const store = configureStore({
     analytics: analyticsReducer,
     riskAssessment: riskAssessmentReducer,
     wealthManagement: wealthManagementReducer,
+    profile: profileReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

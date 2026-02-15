@@ -12,6 +12,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/transactions': 'Transactions',
   '/statements': 'Statements',
   '/chat': 'Ask AI',
+  '/settings/profile': 'Profile Settings',
 };
 
 export function AppShell() {

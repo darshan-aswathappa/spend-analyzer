@@ -7,6 +7,7 @@ import reportsRouter from './reports';
 import riskAssessmentRouter from './riskAssessment';
 import demoRouter from './demo';
 import wealthFlowsRouter from './wealthFlows';
+import profileRouter from './profile';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use('/reports', reportsRouter);
 router.use('/risk-assessment', riskAssessmentRouter);
 router.use('/demo', demoRouter);
 router.use('/wealth-flows', wealthFlowsRouter);
+router.use('/profile', profileRouter);
 
 export default router;

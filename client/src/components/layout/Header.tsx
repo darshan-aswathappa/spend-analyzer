@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Menu } from 'lucide-react';
@@ -33,10 +34,12 @@ export function Header({ title, onMenuClick }: HeaderProps) {
       <div className="flex items-center gap-3">
         <span className="hidden sm:inline text-sm text-gray-500 dark:text-gray-400">{user?.email}</span>
         <ThemeToggle />
-        <Avatar className="h-8 w-8">
-          {avatarUrl && <AvatarImage src={avatarUrl} alt="avatar" />}
-          <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-        </Avatar>
+        <Link to="/settings/profile" title="Profile settings">
+          <Avatar className="h-8 w-8 cursor-pointer ring-offset-white transition-all hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 dark:ring-offset-gray-900 rounded-full">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt="avatar" />}
+            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+          </Avatar>
+        </Link>
       </div>
     </header>
   );
