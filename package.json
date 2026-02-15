@@ -4,7 +4,7 @@
   "description": "Full-stack FinTech spend analyzer",
   "private": true,
   "scripts": {
-    "dev": "concurrently --names CLIENT,SERVER --prefix-colors cyan,green \"npm run dev --prefix client\" \"npm run dev --prefix server\"",
+    "dev": "concurrently --raw \"npm run dev --prefix client\" \"npm run dev --prefix server\"",
     "build": "npm run build --prefix client && npm run build --prefix server",
     "install:all": "npm install && npm install --prefix client && npm install --prefix server"
   },

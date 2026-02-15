@@ -1,5 +1,5 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import apiClient from '@/lib/apiClient';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import apiClient from "@/lib/apiClient";
 
 export interface Profile {
   id: string;
@@ -25,35 +25,35 @@ const initialState: ProfileState = {
   error: null,
 };
 
-export const fetchProfile = createAsyncThunk('profile/fetch', async () => {
-  const { data } = await apiClient.get('/api/profile');
+export const fetchProfile = createAsyncThunk("profile/fetch", async () => {
+  const { data } = await apiClient.get("/profile");
   return data as Profile;
 });
 
 export const updateProfile = createAsyncThunk(
-  'profile/update',
+  "profile/update",
   async (payload: { full_name?: string; email?: string }) => {
-    const { data } = await apiClient.patch('/api/profile', payload);
+    const { data } = await apiClient.patch("/profile", payload);
     return data;
-  }
+  },
 );
 
 export const uploadAvatar = createAsyncThunk(
-  'profile/uploadAvatar',
+  "profile/uploadAvatar",
   async (file: File) => {
     const formData = new FormData();
-    formData.append('avatar', file);
-    const { data } = await apiClient.post('/api/profile/avatar', formData);
+    formData.append("avatar", file);
+    const { data } = await apiClient.post("/profile/avatar", formData);
     return data as { avatar_url: string };
-  }
+  },
 );
 
-export const deleteAccount = createAsyncThunk('profile/delete', async () => {
-  await apiClient.delete('/api/profile');
+export const deleteAccount = createAsyncThunk("profile/delete", async () => {
+  await apiClient.delete("/profile");
 });
 
 const profileSlice = createSlice({
-  name: 'profile',
+  name: "profile",
   initialState,
   reducers: {
     clearProfileError(state) {
@@ -72,7 +72,7 @@ const profileSlice = createSlice({
       })
       .addCase(fetchProfile.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.error.message ?? 'Failed to load profile';
+        state.error = action.error.message ?? "Failed to load profile";
       })
       .addCase(updateProfile.pending, (state) => {
         state.updating = true;
@@ -87,7 +87,7 @@ const profileSlice = createSlice({
       })
       .addCase(updateProfile.rejected, (state, action) => {
         state.updating = false;
-        state.error = action.error.message ?? 'Failed to update profile';
+        state.error = action.error.message ?? "Failed to update profile";
       })
       .addCase(uploadAvatar.pending, (state) => {
         state.updating = true;
@@ -101,7 +101,7 @@ const profileSlice = createSlice({
       })
       .addCase(uploadAvatar.rejected, (state, action) => {
         state.updating = false;
-        state.error = action.error.message ?? 'Failed to upload avatar';
+        state.error = action.error.message ?? "Failed to upload avatar";
       });
   },
 });
