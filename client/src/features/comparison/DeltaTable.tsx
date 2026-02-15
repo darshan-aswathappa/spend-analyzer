@@ -40,7 +40,7 @@ function DeltaPctCell({ row }: { row: MergedCategory }) {
   );
 }
 
-export function DeltaTable({ data, baselineLabel, compareLabel, loading }: Props) {
+export function DeltaTable({ data, baselineLabel: _baselineLabel, compareLabel: _compareLabel, loading }: Props) {
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden animate-pulse">

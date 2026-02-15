@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import apiClient from '@/lib/apiClient';
 import type { AppDispatch, RootState } from '@/app/store';
-import { setStatements, addStatement, removeStatement, setUploading } from './statementsSlice';
+import { setStatements, addStatement, removeStatement, setUploading, setError } from './statementsSlice';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
