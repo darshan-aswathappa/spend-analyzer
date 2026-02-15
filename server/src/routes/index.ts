@@ -8,6 +8,7 @@ import riskAssessmentRouter from './riskAssessment';
 import demoRouter from './demo';
 import wealthFlowsRouter from './wealthFlows';
 import profileRouter from './profile';
+import taxRouter from './tax';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/risk-assessment', riskAssessmentRouter);
 router.use('/demo', demoRouter);
 router.use('/wealth-flows', wealthFlowsRouter);
 router.use('/profile', profileRouter);
+router.use('/tax', taxRouter);
 
 export default router;

@@ -1,3 +1,5 @@
+export type TaxCategoryValue = 'business' | 'medical' | 'charity';
+
 export interface Transaction {
   id: string;
   user_id: string;
@@ -7,7 +9,39 @@ export interface Transaction {
   amount: number;
   type: 'debit' | 'credit';
   category: string;
+  tax_category: TaxCategoryValue | null;
   created_at: string;
+}
+
+export interface TaxLocale {
+  country: string;
+  state: string;
+}
+
+export interface TaxTransactionItem {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  category: string;
+  tax_category: TaxCategoryValue;
+}
+
+export interface TaxCategoryGroup {
+  total: number;
+  count: number;
+  transactions: TaxTransactionItem[];
+}
+
+export interface TaxSummaryData {
+  year: number;
+  tagged: {
+    business: TaxCategoryGroup;
+    medical: TaxCategoryGroup;
+    charity: TaxCategoryGroup;
+  };
+  grandTotal: number;
+  transactionCount: number;
 }
 
 export interface BankStatement {

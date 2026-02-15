@@ -12,6 +12,7 @@ import { RiskAssessmentPage } from "@/features/risk-assessment/RiskAssessmentPag
 import { WealthFlowListPage } from "@/features/wealth-management/WealthFlowListPage";
 import { WealthManagementPage } from "@/features/wealth-management/WealthManagementPage";
 import { ProfileSettingsPage } from "@/features/settings/ProfileSettingsPage";
+import { TaxSummaryPage } from "@/features/tax-summary/TaxSummaryPage";
 
 export function AppRoutes() {
   return (
@@ -39,6 +40,7 @@ export function AppRoutes() {
           element={<WealthManagementPage />}
         />
         <Route path="/settings/profile" element={<ProfileSettingsPage />} />
+        <Route path="/tax-summary" element={<TaxSummaryPage />} />
       </Route>
 
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

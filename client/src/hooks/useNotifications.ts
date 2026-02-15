@@ -5,6 +5,8 @@ import { useToast } from '@/components/ui/toaster';
 import { updateStatementStatus } from '@/features/statements/statementsSlice';
 import { setScore } from '@/features/risk-assessment/riskAssessmentSlice';
 import { invalidateAnalytics } from '@/features/analytics/analyticsSlice';
+import { addNotification } from '@/features/notifications/notificationsSlice';
+import type { NotificationItem } from '@/features/notifications/notificationsSlice';
 
 export function useNotifications() {
   const session = useSelector((state: RootState) => state.auth.session);
@@ -23,6 +25,9 @@ export function useNotifications() {
     es.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === 'connected') return;
+
+      // Add to notifications panel store
+      dispatch(addNotification(data as NotificationItem));
 
       if (data.type === 'statement_processed') {
         dispatch(

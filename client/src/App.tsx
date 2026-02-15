@@ -9,6 +9,9 @@ import type { AppDispatch } from './app/store';
 import { Toaster } from './components/ui/toaster';
 import { useNotifications } from './hooks/useNotifications';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { fetchNotifications } from './features/notifications/notificationsSlice';
+import { useSelector } from 'react-redux';
+import type { RootState } from './app/store';
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch<AppDispatch>();
@@ -30,6 +33,15 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
 function NotificationListener() {
   useNotifications();
+  const dispatch = useDispatch<AppDispatch>();
+  const session = useSelector((state: RootState) => state.auth.session);
+
+  useEffect(() => {
+    if (session?.access_token) {
+      dispatch(fetchNotifications());
+    }
+  }, [session?.access_token, dispatch]);
+
   return null;
 }
 

@@ -197,3 +197,34 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+-- ============================================================
+-- Tax Summary Migration
+-- ============================================================
+
+-- Add tax_category column to transactions
+ALTER TABLE transactions
+  ADD COLUMN IF NOT EXISTS tax_category TEXT
+    CHECK (tax_category IN ('business', 'medical', 'charity'))
+    DEFAULT NULL;
+
+-- Partial index for fast tax summary queries
+CREATE INDEX IF NOT EXISTS idx_transactions_tax_category
+  ON transactions(user_id, tax_category)
+  WHERE tax_category IS NOT NULL;
+
+-- User tax locale settings (country + state per user)
+CREATE TABLE IF NOT EXISTS tax_locale_settings (
+  user_id    UUID PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,
+  country    TEXT NOT NULL,
+  state      TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE tax_locale_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "tax_locale_settings: own data" ON tax_locale_settings
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_tax_locale_settings_user_id
+  ON tax_locale_settings(user_id);

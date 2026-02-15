@@ -2,6 +2,26 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types';
 import { supabase } from '../config/supabase';
 
+export async function getNotifications(
+  req: AuthenticatedRequest,
+  res: Response,
+  _next: NextFunction
+): Promise<void> {
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', req.userId)
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  if (error) {
+    res.status(500).json({ error: error.message });
+    return;
+  }
+
+  res.json(data ?? []);
+}
+
 export async function streamNotifications(
   req: AuthenticatedRequest,
   res: Response,

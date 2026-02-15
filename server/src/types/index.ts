@@ -4,6 +4,8 @@ export interface AuthenticatedRequest extends Request {
   userId: string;
 }
 
+export type TaxCategory = 'business' | 'medical' | 'charity';
+
 export interface Transaction {
   id: string;
   user_id: string;
@@ -13,7 +15,41 @@ export interface Transaction {
   amount: number;
   type: 'debit' | 'credit';
   category: string;
+  tax_category: TaxCategory | null;
   created_at: string;
+}
+
+export interface TaxLocaleSettings {
+  user_id: string;
+  country: string;
+  state: string;
+  updated_at: string;
+}
+
+export interface TaxTransactionItem {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  category: string;
+  tax_category: TaxCategory;
+}
+
+export interface TaxCategoryGroup {
+  total: number;
+  count: number;
+  transactions: TaxTransactionItem[];
+}
+
+export interface TaxSummaryResponse {
+  year: number;
+  tagged: {
+    business: TaxCategoryGroup;
+    medical: TaxCategoryGroup;
+    charity: TaxCategoryGroup;
+  };
+  grandTotal: number;
+  transactionCount: number;
 }
 
 export interface BankStatement {
