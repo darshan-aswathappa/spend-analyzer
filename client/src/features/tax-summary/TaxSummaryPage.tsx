@@ -191,7 +191,7 @@ export function TaxSummaryPage() {
             </span>
           </h2>
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            {untaggedLoading ? (
+            {untaggedLoading && untagged.length === 0 ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
               </div>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Loader2, Tag, X } from 'lucide-react';
 import type { TaxCategoryValue } from '@/types';
 import { TAX_CATEGORIES } from './constants';
@@ -12,19 +13,35 @@ interface Props {
 
 export function TaxCategoryTag({ transactionId, currentValue, onTag, loading }: Props) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
   useEffect(() => {
     if (!open) return;
     function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (
+        buttonRef.current && !buttonRef.current.contains(e.target as Node) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node)
+      ) {
         setOpen(false);
       }
     }
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
+
+  const handleOpen = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPos({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+      });
+    }
+    setOpen((v) => !v);
+  };
 
   const current = TAX_CATEGORIES.find((c) => c.value === currentValue);
 
@@ -37,33 +54,13 @@ export function TaxCategoryTag({ transactionId, currentValue, onTag, loading }: 
     );
   }
 
-  return (
-    <div ref={ref} className="relative inline-block">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="focus:outline-none"
-      >
-        {current ? (
-          <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity"
-            style={{
-              backgroundColor: current.bg,
-              color: current.color,
-              border: `1px solid ${current.borderColor}`,
-            }}
-          >
-            {current.label}
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs text-gray-400 dark:text-gray-500 border border-dashed border-gray-300 dark:border-gray-600 cursor-pointer hover:border-blue-400 hover:text-blue-500 transition-colors">
-            <Tag className="h-3 w-3" />
-            Tag
-          </span>
-        )}
-      </button>
-
-      {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 w-44 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1">
+  const dropdown = open
+    ? createPortal(
+        <div
+          ref={dropdownRef}
+          style={{ position: 'absolute', top: dropdownPos.top, left: dropdownPos.left, zIndex: 9999 }}
+          className="w-44 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1"
+        >
           {TAX_CATEGORIES.map((cat) => (
             <button
               key={cat.value}
@@ -98,8 +95,33 @@ export function TaxCategoryTag({ transactionId, currentValue, onTag, loading }: 
               </button>
             </>
           )}
-        </div>
-      )}
+        </div>,
+        document.body
+      )
+    : null;
+
+  return (
+    <div className="relative inline-block">
+      <button ref={buttonRef} onClick={handleOpen} className="focus:outline-none">
+        {current ? (
+          <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity"
+            style={{
+              backgroundColor: current.bg,
+              color: current.color,
+              border: `1px solid ${current.borderColor}`,
+            }}
+          >
+            {current.label}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs text-gray-400 dark:text-gray-500 border border-dashed border-gray-300 dark:border-gray-600 cursor-pointer hover:border-blue-400 hover:text-blue-500 transition-colors">
+            <Tag className="h-3 w-3" />
+            Tag
+          </span>
+        )}
+      </button>
+      {dropdown}
     </div>
   );
 }

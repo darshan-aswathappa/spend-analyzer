@@ -115,7 +115,10 @@ const taxSummarySlice = createSlice({
 
     // fetchAnnualSummary
     builder.addCase(fetchAnnualSummary.pending, (state) => {
-      state.summaryLoading = true;
+      // Only show spinner on initial load; keep existing data visible during refreshes
+      if (!state.summary) {
+        state.summaryLoading = true;
+      }
       state.error = null;
     });
     builder.addCase(fetchAnnualSummary.fulfilled, (state, action) => {
