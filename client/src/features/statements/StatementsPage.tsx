@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import apiClient from '@/lib/apiClient';
 import type { AppDispatch, RootState } from '@/app/store';
-import { setStatements, addStatement, removeStatement, setUploading, setError } from './statementsSlice';
+import { setStatements, addStatement, removeStatement, setUploading } from './statementsSlice';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,10 +18,11 @@ import type { BankStatement } from '@/types';
 
 export function StatementsPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { items, loading, uploading, error } = useSelector((state: RootState) => state.statements);
+  const { items, loading, uploading } = useSelector((state: RootState) => state.statements);
   const [dragOver, setDragOver] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -61,17 +62,13 @@ export function StatementsPage() {
       setUploadSuccess(
         `${file.name} queued for processing. Should be ready in ~${mins} minute${mins !== 1 ? 's' : ''}. You can upload more files.`
       );
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { data?: { error?: string } }; message?: string };
-      const msg =
-        axiosErr?.response?.data?.error ||
-        axiosErr?.message ||
-        'Upload failed';
-      dispatch(setError(msg));
+    } catch {
+      // Upload errors are not shown on this page
     }
   }
 
   async function handleDelete(id: string) {
+    setDeletingId(id);
     try {
       await apiClient.delete(`/statements/${id}`);
       dispatch(removeStatement(id));
@@ -80,6 +77,8 @@ export function StatementsPage() {
       dispatch(setStatements(res.data));
     } catch {
       // silent
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -155,9 +154,6 @@ export function StatementsPage() {
           </div>
         )}
 
-        {error && (
-          <p className="mt-3 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-4 py-2.5 rounded-lg">{error}</p>
-        )}
       </div>
 
       {/* Statements list */}
@@ -183,6 +179,7 @@ export function StatementsPage() {
                 statement={stmt}
                 onDelete={setConfirmDeleteId}
                 onSetDefault={handleSetDefault}
+                isDeleting={deletingId === stmt.id}
               />
             ))}
           </div>
@@ -212,10 +209,12 @@ function StatementRow({
   statement,
   onDelete,
   onSetDefault,
+  isDeleting,
 }: {
   statement: BankStatement;
   onDelete: (id: string) => void;
   onSetDefault: (id: string) => void;
+  isDeleting: boolean;
 }) {
   const isProcessing = statement.processing_status === 'pending' || statement.processing_status === 'processing';
   const isFailed = statement.processing_status === 'failed';
@@ -269,8 +268,13 @@ function StatementRow({
             size="icon"
             className="h-7 w-7 text-gray-400 dark:text-gray-500 hover:text-red-600 shrink-0"
             onClick={() => onDelete(statement.id)}
+            disabled={isDeleting}
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            {isDeleting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-red-500" />
+            ) : (
+              <Trash2 className="h-3.5 w-3.5" />
+            )}
           </Button>
         </div>
         {/* Actions row */}
