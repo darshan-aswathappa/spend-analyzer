@@ -14,6 +14,11 @@ const PAGE_TITLES: Record<string, string> = {
   '/chat': 'Ask AI',
   '/settings/profile': 'Profile Settings',
   '/tax-summary': 'Tax Summary',
+  '/risk-assessment/impulse': 'Impulse Spending Score',
+  '/risk-assessment/heatmap': 'Category Risk Heatmap',
+  '/risk-assessment/merchants': 'Merchant Risk Flags',
+  '/risk-assessment/payments': 'Payment Behavior Analysis',
+  '/risk-assessment/velocity': 'Spending Velocity Alerts',
 };
 
 export function AppShell() {

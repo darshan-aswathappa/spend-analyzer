@@ -1,16 +1,32 @@
-import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ArrowLeftRight, FileText, MessageSquare, TrendingUp, ShieldCheck, Landmark, LogOut, X, Settings, Receipt, GitCompare } from 'lucide-react';
+import { useState } from 'react';
+import { NavLink, useMatch } from 'react-router-dom';
+import {
+  LayoutDashboard, ArrowLeftRight, FileText, MessageSquare, TrendingUp,
+  ShieldCheck, Landmark, LogOut, X, Settings, Receipt, GitCompare,
+  ChevronDown, Brain, Flame, Store, CreditCard, Zap,
+} from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { cn } from '@/lib/utils';
 
-const navItems = [
+const topNavItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
   { to: '/statements', icon: FileText, label: 'Statements' },
   { to: '/analytics', icon: TrendingUp, label: 'Analytics' },
   { to: '/comparison', icon: GitCompare, label: 'Compare' },
   { to: '/tax-summary', icon: Receipt, label: 'Tax Summary' },
-  { to: '/risk-assessment', icon: ShieldCheck, label: 'Risk Score' },
+];
+
+const riskSubItems = [
+  { to: '/risk-assessment',           icon: ShieldCheck, label: 'Risk Score' },
+  { to: '/risk-assessment/impulse',   icon: Brain,       label: 'Impulse Spending' },
+  { to: '/risk-assessment/heatmap',   icon: Flame,       label: 'Category Heatmap' },
+  { to: '/risk-assessment/merchants', icon: Store,       label: 'Merchant Flags' },
+  { to: '/risk-assessment/payments',  icon: CreditCard,  label: 'Payment Behavior' },
+  { to: '/risk-assessment/velocity',  icon: Zap,         label: 'Velocity Alerts' },
+];
+
+const bottomNavItems = [
   { to: '/wealth-management', icon: Landmark, label: 'Wealth Mgmt' },
   { to: '/chat', icon: MessageSquare, label: 'Ask AI' },
   { to: '/settings/profile', icon: Settings, label: 'Settings' },
@@ -22,9 +38,22 @@ interface SidebarProps {
 }
 
 export function Sidebar({ open, onClose }: SidebarProps) {
+  const riskMatchSub = useMatch('/risk-assessment/*');
+  const riskMatchExact = useMatch('/risk-assessment');
+  const riskMatch = riskMatchSub || riskMatchExact;
+  const [riskOpen, setRiskOpen] = useState(!!riskMatch);
+
   async function handleLogout() {
     await supabase.auth.signOut();
   }
+
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+      isActive
+        ? 'bg-blue-50 text-blue-700 font-medium dark:bg-blue-900/30 dark:text-blue-400'
+        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'
+    );
 
   const sidebarContent = (
     <aside className="w-56 flex flex-col h-full bg-white dark:bg-gray-900 shrink-0">
@@ -49,19 +78,74 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {navItems.map(({ to, icon: Icon, label }) => (
+        {/* Top nav items */}
+        {topNavItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
             onClick={onClose}
-            className={({ isActive }) =>
-              cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
-                isActive
-                  ? 'bg-blue-50 text-blue-700 font-medium dark:bg-blue-900/30 dark:text-blue-400'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'
-              )
-            }
+            className={navLinkClass}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            {label}
+          </NavLink>
+        ))}
+
+        {/* Risk dropdown */}
+        <div>
+          <button
+            onClick={() => setRiskOpen((v) => !v)}
+            className={cn(
+              'flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm transition-colors',
+              riskMatch
+                ? 'bg-blue-50 text-blue-700 font-medium dark:bg-blue-900/30 dark:text-blue-400'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="h-4 w-4 shrink-0" />
+              Risk
+            </div>
+            <ChevronDown
+              className={cn(
+                'h-3.5 w-3.5 shrink-0 transition-transform duration-200',
+                riskOpen ? 'rotate-180' : ''
+              )}
+            />
+          </button>
+
+          {riskOpen && (
+            <div className="mt-0.5 space-y-0.5 pl-2">
+              {riskSubItems.map(({ to, icon: Icon, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={to === '/risk-assessment'}
+                  onClick={onClose}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-2.5 px-3 py-1.5 rounded-lg transition-colors',
+                      isActive
+                        ? 'bg-blue-50 text-blue-700 font-medium dark:bg-blue-900/30 dark:text-blue-400'
+                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'
+                    )
+                  }
+                >
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  <span className="text-xs">{label}</span>
+                </NavLink>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom nav items */}
+        {bottomNavItems.map(({ to, icon: Icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            onClick={onClose}
+            className={navLinkClass}
           >
             <Icon className="h-4 w-4 shrink-0" />
             {label}

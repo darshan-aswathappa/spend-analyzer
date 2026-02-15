@@ -9,6 +9,7 @@ import wealthManagementReducer from '@/features/wealth-management/wealthManageme
 import profileReducer from '@/features/settings/profileSlice';
 import notificationsReducer from '@/features/notifications/notificationsSlice';
 import taxSummaryReducer from '@/features/tax-summary/taxSummarySlice';
+import riskInsightsReducer from '@/features/risk-assessment/riskInsightsSlice';
 import { wealthAutoSaveMiddleware } from '@/features/wealth-management/wealthAutoSaveMiddleware';
 
 export const store = configureStore({
@@ -23,6 +24,7 @@ export const store = configureStore({
     profile: profileReducer,
     notifications: notificationsReducer,
     taxSummary: taxSummaryReducer,
+    riskInsights: riskInsightsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
