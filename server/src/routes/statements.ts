@@ -7,6 +7,7 @@ import {
   getStatements,
   deleteStatement,
   setDefaultStatement,
+  viewStatementPdf,
 } from '../controllers/statementsController';
 import { AuthenticatedRequest } from '../types';
 
@@ -35,6 +36,7 @@ router.use(authenticate as any);
 
 router.get('/', getStatements as any);
 router.post('/upload', upload.single('statement'), uploadStatement as any);
+router.get('/:id/pdf', viewStatementPdf as any);
 router.patch('/:id/set-default', setDefaultStatement as any);
 router.delete('/:id', deleteStatement as any);
 

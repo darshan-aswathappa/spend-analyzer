@@ -1,5 +1,6 @@
 import { Response, NextFunction } from 'express';
 import fs from 'fs';
+import path from 'path';
 import { AuthenticatedRequest } from '../types';
 import { supabase } from '../config/supabase';
 import { getRabbitChannel, getQueueName } from '../config/rabbitmq';
@@ -94,10 +95,10 @@ export async function deleteStatement(
   try {
     const { id } = req.params;
 
-    // Check if the statement being deleted is the default
+    // Check if the statement being deleted is the default, and get file_path for cleanup
     const { data: toDelete } = await supabase
       .from('bank_statements')
-      .select('is_default')
+      .select('is_default, file_path')
       .eq('id', id)
       .eq('user_id', req.userId)
       .single();
@@ -109,6 +110,11 @@ export async function deleteStatement(
       .eq('user_id', req.userId);
 
     if (error) throw error;
+
+    // Clean up file from disk
+    if (toDelete?.file_path && fs.existsSync(toDelete.file_path)) {
+      fs.unlinkSync(toDelete.file_path);
+    }
 
     // If deleted statement was default, promote the most recent remaining one
     if (toDelete?.is_default) {
@@ -145,6 +151,38 @@ export async function deleteStatement(
     }
 
     res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function viewStatementPdf(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const { id } = req.params;
+
+    const { data: statement, error } = await supabase
+      .from('bank_statements')
+      .select('file_path')
+      .eq('id', id)
+      .eq('user_id', req.userId)
+      .single();
+
+    if (error || !statement) {
+      res.status(404).json({ error: 'Statement not found' });
+      return;
+    }
+
+    if (!statement.file_path || !fs.existsSync(statement.file_path)) {
+      res.status(404).json({ error: 'File not available' });
+      return;
+    }
+
+    const absolutePath = path.resolve(statement.file_path);
+    res.sendFile(absolutePath, { headers: { 'Content-Type': 'application/pdf' } });
   } catch (err) {
     next(err);
   }

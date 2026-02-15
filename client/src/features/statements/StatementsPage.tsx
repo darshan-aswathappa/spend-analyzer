@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Upload, FileText, Trash2, Loader2, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { Upload, FileText, Trash2, Loader2, CheckCircle, AlertCircle, Clock, Eye } from 'lucide-react';
 import { formatDate, cn } from '@/lib/utils';
 import type { BankStatement } from '@/types';
 
@@ -23,6 +23,8 @@ export function StatementsPage() {
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [viewingPdfUrl, setViewingPdfUrl] = useState<string | null>(null);
+  const [viewingPdfLoading, setViewingPdfLoading] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -90,6 +92,19 @@ export function StatementsPage() {
       dispatch(setStatements(updated));
     } catch {
       // silent
+    }
+  }
+
+  async function handleViewPdf(id: string) {
+    setViewingPdfLoading(id);
+    try {
+      const res = await apiClient.get(`/statements/${id}/pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      setViewingPdfUrl(url);
+    } catch {
+      // File not available (e.g. older statement processed before this feature)
+    } finally {
+      setViewingPdfLoading(null);
     }
   }
 
@@ -179,12 +194,32 @@ export function StatementsPage() {
                 statement={stmt}
                 onDelete={setConfirmDeleteId}
                 onSetDefault={handleSetDefault}
+                onView={handleViewPdf}
                 isDeleting={deletingId === stmt.id}
+                isViewLoading={viewingPdfLoading === stmt.id}
               />
             ))}
           </div>
         )}
       </div>
+
+      <Dialog
+        open={!!viewingPdfUrl}
+        onOpenChange={(open) => {
+          if (!open && viewingPdfUrl) {
+            URL.revokeObjectURL(viewingPdfUrl);
+            setViewingPdfUrl(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-4xl h-[85vh] p-0 overflow-hidden">
+          <DialogTitle className="sr-only">PDF Statement</DialogTitle>
+          <DialogDescription className="sr-only">View your bank statement PDF</DialogDescription>
+          {viewingPdfUrl && (
+            <iframe src={viewingPdfUrl} className="w-full h-full border-0 rounded-lg" title="Bank statement PDF" />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!confirmDeleteId} onOpenChange={(open) => { if (!open) setConfirmDeleteId(null); }}>
         <DialogContent>
@@ -209,12 +244,16 @@ function StatementRow({
   statement,
   onDelete,
   onSetDefault,
+  onView,
   isDeleting,
+  isViewLoading,
 }: {
   statement: BankStatement;
   onDelete: (id: string) => void;
   onSetDefault: (id: string) => void;
+  onView: (id: string) => void;
   isDeleting: boolean;
+  isViewLoading: boolean;
 }) {
   const isProcessing = statement.processing_status === 'pending' || statement.processing_status === 'processing';
   const isFailed = statement.processing_status === 'failed';
@@ -292,6 +331,20 @@ function StatementRow({
                 Set as active
               </Button>
             )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600"
+              onClick={(e) => { e.stopPropagation(); onView(statement.id); }}
+              disabled={isViewLoading}
+            >
+              {isViewLoading ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+              ) : (
+                <Eye className="h-3.5 w-3.5 mr-1" />
+              )}
+              View PDF
+            </Button>
             <span className="text-xs text-gray-400 ml-auto">{formatDate(statement.uploaded_at)}</span>
           </div>
         )}

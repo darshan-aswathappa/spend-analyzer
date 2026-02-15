@@ -126,10 +126,7 @@ async function start() {
 
       channel.ack(msg);
     } finally {
-      // Clean up temp file
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+      // Files are kept on disk so users can view them; deleted when the statement is deleted
     }
   });
 }
